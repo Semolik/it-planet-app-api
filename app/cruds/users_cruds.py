@@ -1,8 +1,10 @@
 import uuid
+from fastapi import UploadFile
 from sqlalchemy.orm import selectinload
 from sqlalchemy import select, or_, nulls_first
-
+from models.files import Image
 from cruds.base_crud import BaseCRUD
+from utilities.files import save_image
 from models.user import User
 from schemas.users import UserUpdate
 from users_controller import get_user_manager_context
@@ -10,13 +12,33 @@ from users_controller import get_user_manager_context
 
 class UsersCrud(BaseCRUD):
     async def get_user_by_id(self, user_id: uuid.UUID) -> User:
-        query = await self.db.execute(select(User).where(User.id == user_id).options(selectinload(User.faculty)))
+        query = await self.db.execute(select(User).where(User.id == user_id).options(selectinload(User.image)))
         return query.scalars().first()
 
     async def get_user_by_email(self, email: str) -> User:
-        user = select(User).where(User.email == email)
+        user = select(User).where(User.email == email).options(
+            selectinload(User.image))
         result = await self.db.execute(user)
         return result.scalars().first()
+
+    async def update_user_image(self, user: User, image: UploadFile) -> Image | None:
+        if user.image_id:
+            image_id = user.image_id
+            user.image_id = None
+            old_image = await self.get(image_id, Image)
+            await self.delete(old_image)
+        image_model = await save_image(db=self.db, upload_file=image)
+        user.image_id = image_model.id
+        await self.update(user)
+        return image_model
+
+    async def delete_user_image(self, user: User) -> None:
+        if user.image_id:
+            image_id = user.image_id
+            user.image_id = None
+            old_image = await self.get(image_id, Image)
+            await self.delete(old_image)
+            await self.update(user)
 
     async def get_users(self, order_by: str = "name", order: str = "asc", search: str = None, page: int = 1, superusers_to_top: bool = False, only_superusers: bool = False, is_verified: bool = None,
                         page_size: int = 20) -> list[User]:

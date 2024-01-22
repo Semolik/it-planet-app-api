@@ -30,6 +30,7 @@ def get_image_link(image_id: UUID) -> str:
 
 async def save_image(db: AsyncSession,  upload_file: UploadFile, resize_image_options=(400, 400),
                      detail_error_message="поврежденное изображение") -> Image:
+
     originalFileName = upload_file.filename
     originalFilePath = Path(originalFileName)
     suffix = originalFilePath.suffix

@@ -1,9 +1,10 @@
 from typing import List, Literal, Union
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from pydantic import TypeAdapter
 from cruds.users_cruds import UsersCrud
 from schemas.users import UserRead, UserUpdate, UserReadWithEmail
+from schemas.files import ImageInfo
 from users_controller import current_active_user, current_superuser, optional_current_user
 from db.db import get_async_session
 from models.user import User
@@ -35,6 +36,26 @@ async def update_user_me(
     current_user: User = Depends(current_active_user)
 ):
     return await update_handler(db=db, user=current_user, user_data=user, current_user=current_user)
+
+
+@api_router.put("/me/image", response_model=ImageInfo)
+async def update_user_me_image(
+    userPicture: UploadFile = File(
+        default=..., description='Фото пользователя'),
+    db=Depends(get_async_session),
+    current_user: User = Depends(current_active_user)
+):
+    users_crud = UsersCrud(db)
+    image = await users_crud.update_user_image(user=current_user, image=userPicture)
+    return image
+
+
+@api_router.delete("/me/image", status_code=204)
+async def delete_user_me_image(
+    db=Depends(get_async_session),
+    current_user: User = Depends(current_active_user)
+):
+    await UsersCrud(db).delete_user_image(user=current_user)
 
 
 @api_router.put("/{user_id}", response_model=UserReadWithEmail)

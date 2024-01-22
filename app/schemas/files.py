@@ -1,6 +1,6 @@
 from pydantic import BaseModel, model_validator, validator
-from models.app import Image, ObjectAudio
-from utilities.files import get_image_link, get_audio_link
+from models.files import Image
+from utilities.files import get_image_link
 from uuid import UUID
 
 from pydantic_core import core_schema
