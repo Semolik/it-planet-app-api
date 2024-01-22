@@ -1,0 +1,35 @@
+version: '3'
+services:
+  api:
+    build: ./app
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app
+      - ./content:/content
+    env_file:
+      - .env
+    depends_on:
+      - db
+  db:
+    env_file:
+      - .env
+    image: postgres:16
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  smtp4dev:
+    image: rnwood/smtp4dev:v3
+    ports:
+      - 1080:80
+    volumes:
+      - /smtp4dev-data:/smtp4dev
+    environment:
+      - ServerOptions__HostName=$EMAIL_SERVER
+      - RelayOptions__Login=$EMAIL_USERNAME
+      - RelayOptions__Password=$EMAIL_PASSWORD
