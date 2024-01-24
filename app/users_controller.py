@@ -133,7 +133,7 @@ get_user_db_context = contextlib.asynccontextmanager(get_user_db)
 get_user_manager_context = contextlib.asynccontextmanager(get_user_manager)
 
 
-async def create_user(email: str, password: str, name: str, is_superuser: bool = False, faculty_id: uuid.UUID = None, is_verified: bool = False):
+async def create_user(email: str, password: str, name: str, register_date: datetime, is_superuser: bool = False, is_verified: bool = False):
     try:
         async with get_async_session_context() as session:
             async with get_user_db_context(session) as user_db:
@@ -146,7 +146,7 @@ async def create_user(email: str, password: str, name: str, is_superuser: bool =
                             name=name,
                             is_verified=is_verified,
                             birthdate=None,
-                            register_date=datetime.now()
+                            register_date=register_date
                         )
                     )
     except UserAlreadyExists:
