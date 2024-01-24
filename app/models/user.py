@@ -16,3 +16,4 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     image_id = Column(UUID(as_uuid=True), ForeignKey(
         'images.id'), nullable=True)
     image = relationship("Image", foreign_keys=[image_id])
+    discription = Column(String, nullable=False, default='')
