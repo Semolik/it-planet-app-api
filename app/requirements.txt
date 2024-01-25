@@ -7,3 +7,4 @@ pillow==10.1.0
 pydantic-async-validation==0.1.0
 requests==2.31.0
 fastapi-mail[httpx]==1.4.1
+aio-pika==8.2.5

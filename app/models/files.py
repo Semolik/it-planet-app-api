@@ -1,10 +1,6 @@
-from fastapi_users.db import SQLAlchemyBaseUserTableUUID
-from sqlalchemy.orm import object_session
-
 from db.db import Base
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy import Column, ForeignKey, Enum, String, DateTime, func, event
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column
 from uuid import uuid4
 
 
