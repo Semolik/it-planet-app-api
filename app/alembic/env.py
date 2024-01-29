@@ -2,9 +2,10 @@ from sqlalchemy import pool
 from sqlalchemy import engine_from_config
 from logging.config import fileConfig
 from db.db import Base
+from models.locations import *
 from models.user import *
 from models.files import *
-
+from models.requests import *
 
 from os import getenv
 from alembic import context
