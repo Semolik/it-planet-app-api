@@ -30,3 +30,12 @@ async def get_city(city_id: uuid.UUID, db=Depends(get_async_session)):
     if not city:
         raise HTTPException(404, "City not found")
     return city
+
+@api_router.put("/{city_id}", response_model=City)
+async def update_city(city_id: uuid.UUID, city: CreateCity, db=Depends(get_async_session),        
+    current_user: User = Depends(current_superuser)):
+    db_city = await LocationsCrud(db).get_city(city_id=city_id)
+    if not db_city:
+        raise HTTPException(404, "City not found")
+    return await LocationsCrud(db).update_city(city=db_city,name = city.name)
+    
