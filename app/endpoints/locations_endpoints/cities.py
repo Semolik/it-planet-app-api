@@ -39,3 +39,10 @@ async def update_city(city_id: uuid.UUID, city: CreateCity, db=Depends(get_async
         raise HTTPException(404, "City not found")
     return await LocationsCrud(db).update_city(city=db_city,name = city.name)
     
+@api_router.delete("/{city_id}", status_code=204)
+async def delete_city(city_id: uuid.UUID, db=Depends(get_async_session),
+    current_user: User = Depends(current_superuser)):
+    db_city = await LocationsCrud(db).get_city(city_id=city_id)
+    if not db_city:
+        raise HTTPException(404, "City not found")
+    await LocationsCrud(db).delete(db_city)
