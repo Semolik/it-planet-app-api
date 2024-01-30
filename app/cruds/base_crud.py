@@ -10,10 +10,16 @@ class BaseCRUD:
     async def get(self, id: Any, model):
         return await self.db.get(model, id)
 
-    async def paginate(self, model, page: int = 1, per_page: int = 10):
+    async def paginate(self, model, page: int = 1, per_page: int = 10, query_func=None, options=None):
         end = page * per_page
         start = end - per_page
-        query = await self.db.execute(select(model).slice(start, end))
+        query = select(model)
+        if query_func:
+            query = query_func(query)
+        query = query.slice(start, end)
+        if options:
+            query = query.options(*options)
+        query = await self.db.execute(query)
         return query.scalars().all()
 
     async def page_count(self, model, per_page: int = 10):

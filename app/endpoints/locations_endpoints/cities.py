@@ -1,11 +1,9 @@
-from typing import List, Literal, Union
+from typing import List
 import uuid
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
-from pydantic import TypeAdapter
+from fastapi import APIRouter, Depends, HTTPException
 from cruds.locations_crud import LocationsCrud
 from schemas.locations import CreateCity, City
-from schemas.files import ImageInfo
-from users_controller import current_active_user, current_superuser, optional_current_user
+from users_controller import current_superuser
 from db.db import get_async_session
 from models.user import User
 
@@ -31,18 +29,22 @@ async def get_city(city_id: uuid.UUID, db=Depends(get_async_session)):
         raise HTTPException(404, "City not found")
     return city
 
+
 @api_router.put("/{city_id}", response_model=City)
-async def update_city(city_id: uuid.UUID, city: CreateCity, db=Depends(get_async_session),        
-    current_user: User = Depends(current_superuser)):
+async def update_city(city_id: uuid.UUID, city: CreateCity, db=Depends(get_async_session),
+                      current_user: User = Depends(current_superuser)):
     db_city = await LocationsCrud(db).get_city(city_id=city_id)
     if not db_city:
         raise HTTPException(404, "City not found")
-    return await LocationsCrud(db).update_city(city=db_city,name = city.name)
-    
+    return await LocationsCrud(db).update_city(city=db_city, name=city.name)
+
+
 @api_router.delete("/{city_id}", status_code=204)
 async def delete_city(city_id: uuid.UUID, db=Depends(get_async_session),
-    current_user: User = Depends(current_superuser)):
+                      current_user: User = Depends(current_superuser)):
     db_city = await LocationsCrud(db).get_city(city_id=city_id)
     if not db_city:
         raise HTTPException(404, "City not found")
+    if await LocationsCrud(db).city_has_institutes(city_id=city_id):
+        raise HTTPException(400, "City has institutes")
     await LocationsCrud(db).delete(db_city)
