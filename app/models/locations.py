@@ -16,7 +16,8 @@ class University(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     name = Column(String, nullable=False)
     short_name = Column(String, nullable=False)
-    institutes = relationship("Institute", back_populates="university")
+    institutes = relationship(
+        "Institute", back_populates="university", cascade="all, delete-orphan")
 
 
 class Institute(Base):

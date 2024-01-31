@@ -30,13 +30,8 @@ async def create_institute(institute: CreateInstitute, db=Depends(get_async_sess
 
 
 @api_router.get("", response_model=List[Institute])
-async def get_institutes(city_id: uuid.UUID, page: int = Query(1, ge=1), db=Depends(get_async_session)):
-    return await InstitutesCrud(db).get_institutes(city_id=city_id, page=page)
-
-
-@api_router.get("/search", response_model=List[Institute])
-async def search_institutes(query: str = None, page: int = Query(1, ge=1), db=Depends(get_async_session)):
-    return await InstitutesCrud(db).search_institutes(query=query, page=page)
+async def get_institutes(city_id: uuid.UUID, query: str = None, page: int = Query(1, ge=1), db=Depends(get_async_session)):
+    return await InstitutesCrud(db).get_institutes(city_id=city_id, page=page, search_query=query)
 
 
 @api_router.get("/{institute_id}", response_model=Institute)

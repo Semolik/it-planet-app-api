@@ -25,12 +25,17 @@ class InstitutesCrud(BaseCRUD):
         query = await self.db.execute(select(Institute).where(Institute.id == institute_id).options(selectinload(Institute.university), selectinload(Institute.city)))
         return query.scalars().first()
 
-    async def get_institutes(self, city_id: uuid.UUID, page: int = 1) -> list[Institute]:
+    async def get_institutes(self, city_id: uuid.UUID, search_query: str = None, page: int = 1) -> list[Institute]:
+        def query_func(q):
+            q = q.where(Institute.city_id == city_id)
+            if search_query:
+                q = q.where(Institute.name.ilike(f"%{search_query}%"))
+            return q
         return await self.paginate(
             Institute,
             page=page,
             per_page=20,
-            query_func=lambda q: q.where(Institute.city_id == city_id),
+            query_func=query_func,
             options=[selectinload(Institute.university),
                      selectinload(Institute.city)]
         )
