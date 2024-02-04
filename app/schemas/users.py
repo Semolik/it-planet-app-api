@@ -17,6 +17,7 @@ class CustomUserFields(BaseModel):
     birthdate: datetime | None = None
     register_date: datetime
     discription: str = ''
+    verified: bool
 
 
 class CustomUserFieldsRead(BaseModel):

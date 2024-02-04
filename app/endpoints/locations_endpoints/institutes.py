@@ -19,12 +19,12 @@ async def create_institute(institute: CreateInstitute, db=Depends(get_async_sess
                            current_user: User = Depends(current_superuser)):
     city = await CitiesCrud(db).get_city(city_id=institute.city_id)
     if not city:
-        raise HTTPException(404, "City not found")
+        raise HTTPException(404, "Город не найден")
     if institute.university_id:
         university = await UniversitiesCrud(db).get_university(
             university_id=institute.university_id)
         if not university:
-            raise HTTPException(404, "University not found")
+            raise HTTPException(404, "Университет не найден")
     city = await InstitutesCrud(db).create_institute(name=institute.name, city_id=institute.city_id, university_id=institute.university_id)
     return await InstitutesCrud(db).get_intstitute(institute_id=city.id)
 
@@ -38,7 +38,7 @@ async def get_institutes(city_id: uuid.UUID, query: str = None, page: int = Quer
 async def get_institute(institute_id: uuid.UUID, db=Depends(get_async_session)):
     institute = await InstitutesCrud(db).get_intstitute(institute_id=institute_id)
     if not institute:
-        raise HTTPException(404, "Institute not found")
+        raise HTTPException(404, "Институт не найден")
     return institute
 
 
@@ -47,15 +47,15 @@ async def update_institute(institute_id: uuid.UUID, institute: CreateInstitute, 
                            current_user: User = Depends(current_superuser)):
     db_institute = await InstitutesCrud(db).get_intstitute(institute_id=institute_id)
     if not db_institute:
-        raise HTTPException(404, "Institute not found")
+        raise HTTPException(404, "Институт не найден")
     city = await CitiesCrud(db).get_city(city_id=institute.city_id)
     if not city:
-        raise HTTPException(404, "City not found")
+        raise HTTPException(404, "Город не найден")
     if institute.university_id:
         university = await UniversitiesCrud(db).get_university(
             university_id=institute.university_id)
         if not university:
-            raise HTTPException(404, "University not found")
+            raise HTTPException(404, "Университет не найден")
     return await InstitutesCrud(db).update_institute(institute=db_institute, name=institute.name, city_id=institute.city_id, university_id=institute.university_id)
 
 
@@ -64,5 +64,5 @@ async def delete_institute(institute_id: uuid.UUID, db=Depends(get_async_session
                            current_user: User = Depends(current_superuser)):
     db_institute = await InstitutesCrud(db).get_intstitute(institute_id=institute_id)
     if not db_institute:
-        raise HTTPException(404, "Institute not found")
+        raise HTTPException(404, "Институт не найден")
     await InstitutesCrud(db).delete(db_institute)

@@ -13,8 +13,9 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     register_date = Column(DateTime(timezone=True), server_default=func.now())
     birthdate = Column(DateTime(timezone=True), nullable=True)
     image_id = Column(UUID(as_uuid=True), ForeignKey(
-        'images.id'), nullable=True)
-    image = relationship("Image", foreign_keys=[image_id])
+        'images.id', ondelete='SET NULL'), nullable=True)
+    image = relationship("Image", foreign_keys=[
+                         image_id], cascade="all,delete")
     discription = Column(String, nullable=False, default='')
     verified = Column(Boolean, nullable=False, default=False)
     institute_id = Column(UUID(as_uuid=True), ForeignKey(

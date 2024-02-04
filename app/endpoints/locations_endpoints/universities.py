@@ -28,7 +28,7 @@ async def get_universities(city_id: uuid.UUID, query: str = None, page: int = Qu
 async def get_university(university_id: uuid.UUID, db=Depends(get_async_session)):
     university = await UniversitiesCrud(db).get_university(university_id=university_id)
     if not university:
-        raise HTTPException(404, "University not found")
+        raise HTTPException(404, "Университет не найден")
     return university
 
 
@@ -37,7 +37,7 @@ async def update_university(university_id: uuid.UUID, university: CreateUniversi
                             current_user: User = Depends(current_superuser)):
     db_university = await UniversitiesCrud(db).get_university(university_id=university_id)
     if not db_university:
-        raise HTTPException(404, "University not found")
+        raise HTTPException(404, "Университет не найден")
     return await UniversitiesCrud(db).update_university(university=db_university, name=university.name, short_name=university.short_name)
 
 
@@ -46,5 +46,5 @@ async def delete_university(university_id: uuid.UUID, db=Depends(get_async_sessi
                             current_user: User = Depends(current_superuser)):
     db_university = await UniversitiesCrud(db).get_university(university_id=university_id)
     if not db_university:
-        raise HTTPException(404, "University not found")
+        raise HTTPException(404, "Университет не найден")
     await UniversitiesCrud(db).delete(db_university)

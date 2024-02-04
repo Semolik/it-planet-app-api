@@ -5,7 +5,7 @@ from pydantic import TypeAdapter
 from cruds.users_cruds import UsersCrud
 from schemas.users import UserRead, UserUpdate, UserReadWithEmail
 from schemas.files import ImageInfo
-from users_controller import current_active_user, current_superuser, optional_current_user
+from users_controller import current_active_user, current_superuser
 from db.db import get_async_session
 from models.user import User
 
@@ -94,7 +94,7 @@ async def get_user(
     return UserRead.model_validate(user)
 
 
-@api_router.get("", response_model=List[Union[UserRead, UserReadWithEmail]])
+@api_router.get("", response_model=List[UserReadWithEmail])
 async def get_users(
     search: str = None,
     page: int = Query(1, ge=1),
@@ -104,7 +104,7 @@ async def get_users(
     only_superusers: bool = False,
     is_verified: bool = None,
     db=Depends(get_async_session),
-    current_user: User = Depends(optional_current_user)
+    current_user: User = Depends(current_superuser)
 ):
     users = await UsersCrud(db).get_users(
         order_by=order_by,
@@ -115,9 +115,7 @@ async def get_users(
         is_verified=is_verified,
         only_superusers=only_superusers
     )
-    if current_user and current_user.is_superuser:
-        return TypeAdapter(List[UserReadWithEmail]).validate_python(users)
-    return TypeAdapter(List[UserRead]).validate_python(users)
+    return users
 
 
 @api_router.delete("/{user_id}", status_code=204)

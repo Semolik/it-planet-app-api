@@ -146,7 +146,8 @@ async def create_user(email: str, password: str, name: str, register_date: datet
                             name=name,
                             is_verified=is_verified,
                             birthdate=None,
-                            register_date=register_date
+                            register_date=register_date,
+                            verified=True if is_superuser else False
                         )
                     )
     except UserAlreadyExists:
