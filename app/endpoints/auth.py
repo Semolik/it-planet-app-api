@@ -12,11 +12,9 @@ api_router.include_router(
     fastapi_users.get_reset_password_router(),
 )
 api_router.include_router(
-    fastapi_users.get_verify_router(UserRead),
+    fastapi_users.get_verify_router(UserRead)
 )
 
 api_router.include_router(
-    fastapi_users.get_register_router(UserRead, UserCreate),
-
-
+    fastapi_users.get_register_router(UserRead, UserCreate)
 )

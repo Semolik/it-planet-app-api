@@ -13,24 +13,23 @@ from mail.conf import conf
 api_router = APIRouter(prefix="/verification", tags=["verification"])
 
 
-@api_router.get("", response_model=List[VerificationRequest])
-async def get_verification_requests(page: int = Query(1, ge=1), db=Depends(get_async_session),
-                                    current_user=Depends(current_superuser)):
+@api_router.get("", response_model=List[VerificationRequest], dependencies=[Depends(current_superuser)])
+async def get_verification_requests(page: int = Query(1, ge=1), db=Depends(get_async_session)):
     return await VerificationCrud(db).get_verification_requests(page=page)
 
 
 @api_router.get("/me", response_model=VerificationRequest)
-async def get_user_verification_request(db=Depends(get_async_session),
-                                        current_user=Depends(current_active_user)):
+async def get_user_verification_request(
+        db=Depends(get_async_session),
+        current_user=Depends(current_active_user)):
     verification_request = await VerificationCrud(db).last_active_verification_request(user=current_user)
     if not verification_request:
         raise HTTPException(404, "Запрос на верификацию не найден")
     return verification_request
 
 
-@api_router.get("/{verification_request_id}", response_model=VerificationRequest)
-async def get_verification_request(verification_request_id: uuid.UUID, db=Depends(get_async_session),
-                                   current_user=Depends(current_superuser)):
+@api_router.get("/{verification_request_id}", response_model=VerificationRequest, dependencies=[Depends(current_superuser)])
+async def get_verification_request(verification_request_id: uuid.UUID, db=Depends(get_async_session)):
     verification_request = await VerificationCrud(db).get_verification_request(verification_request_id=verification_request_id)
     if not verification_request:
         raise HTTPException(404, "Запрос на верификацию не найден")
@@ -70,9 +69,8 @@ async def delete_verification_request(verification_request_id: uuid.UUID, db=Dep
     await VerificationCrud(db).delete(verification_request)
 
 
-@api_router.put("/{verification_request_id}", response_model=VerificationRequest)
-async def update_verification_request(verification_request_id: uuid.UUID, approved: bool, db=Depends(get_async_session),
-                                      current_superuser=Depends(current_superuser)):
+@api_router.put("/{verification_request_id}", response_model=VerificationRequest, dependencies=[Depends(current_superuser)])
+async def update_verification_request(verification_request_id: uuid.UUID, approved: bool, db=Depends(get_async_session)):
     verification_request = await VerificationCrud(db).get_verification_request(verification_request_id=verification_request_id)
     if not verification_request:
         raise HTTPException(404, "Запрос на верификацию не найден")

@@ -1,7 +1,6 @@
 from typing import List, Literal, Union
 import uuid
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
-from pydantic import TypeAdapter
 from cruds.users_cruds import UsersCrud
 from schemas.users import UserRead, UserUpdate, UserReadWithEmail
 from schemas.files import ImageInfo

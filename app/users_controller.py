@@ -128,6 +128,7 @@ auth_backend = AuthenticationBackend(
 fastapi_users = FastAPIUsers[User, uuid.UUID](get_user_manager, [auth_backend])
 current_active_user = fastapi_users.current_user(active=True)
 current_superuser = fastapi_users.current_user(superuser=True)
+current_verified_user = fastapi_users.current_user(verified=True)
 optional_current_user = fastapi_users.current_user(optional=True)
 get_user_db_context = contextlib.asynccontextmanager(get_user_db)
 get_user_manager_context = contextlib.asynccontextmanager(get_user_manager)
