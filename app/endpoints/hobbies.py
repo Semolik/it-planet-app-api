@@ -17,9 +17,9 @@ async def create_hobby(name: str, db=Depends(get_async_session)):
 
 
 @api_router.get("", response_model=List[Hobby])
-async def get_hobbies(page: int = Query(ge=1), db=Depends(get_async_session)):
+async def get_hobbies(page: int = Query(ge=1), query: str = None, db=Depends(get_async_session)):
     '''Возвращает список хобби, отсортированный по количеству пользователей, занимающихся этим хобби.'''
-    return await HobbiesCrud(db).get_hobbies(page=page)
+    return await HobbiesCrud(db).get_hobbies(page=page,hobby_query = query)
 
 
 @api_router.put("/{hobby_id}", response_model=Hobby, dependencies=[Depends(current_superuser)])
@@ -45,3 +45,4 @@ async def delete_hobby(hobby_id: uuid.UUID, db=Depends(get_async_session)):
     if not hobby:
         raise HTTPException(status_code=404, detail="Хобби не найдено")
     await HobbiesCrud(db).delete(hobby)
+    
