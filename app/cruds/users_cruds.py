@@ -101,3 +101,19 @@ class UsersCrud(BaseCRUD):
         if not liked_user_like:
             return False
         return user_like.like and liked_user_like.like
+
+    async def get_matches(self, user: User, page: int = 1, page_size: int = 20) -> list[User]:
+        user_id = user.id
+        query = await self.db.execute(select(UserLike).where(
+            (UserLike.user_id == user_id) &
+            (UserLike.like == True) &  # пользователь поставил лайк
+            (UserLike.liked_user_id.in_(
+                select(UserLike.user_id).where(
+                    (UserLike.user_id == UserLike.liked_user_id) &  # это пара лайков
+                    # нас лайкнул другой пользователь
+                    (UserLike.liked_user_id == user_id) &
+                    (UserLike.like == True)  # и мы его лайкнули
+                )
+            ))
+        ).options(selectinload(UserLike.liked_user)))
+        result = query.scalars().all()

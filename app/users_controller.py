@@ -146,7 +146,7 @@ async def create_user(email: str, password: str, name: str, register_date: datet
                             is_superuser=is_superuser,
                             name=name,
                             is_verified=is_verified,
-                            birthdate=None,
+                            birthdate=datetime.now(),
                             register_date=register_date,
                             verified=True if is_superuser else False
                         )

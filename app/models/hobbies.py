@@ -1,10 +1,7 @@
 from db.db import Base
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy import Boolean, Column, ForeignKey, DateTime, func, String, select
+from sqlalchemy import Boolean, Column, ForeignKey, DateTime, func, String
 from uuid import uuid4
-from sqlalchemy.orm import relationship, object_session, column_property
-from sqlalchemy.orm import deferred
-import asyncio
 import asyncio
 
 

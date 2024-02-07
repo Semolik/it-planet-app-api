@@ -25,6 +25,7 @@ class CustomUserFields(CustomUserFieldsWithoutDates):
 
 class CustomUserFieldsRead(BaseModel):
     image: ImageLink | None = None
+    age: int
 
 
 class UserRead(BaseUser[uuid.UUID], CustomUserFields, CustomUserFieldsRead):

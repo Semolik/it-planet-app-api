@@ -4,7 +4,7 @@ from fastapi import UploadFile
 from models.user import User
 from cruds.base_crud import BaseCRUD
 from models.verification import VerificationRequest
-from models.locations import Institute
+from models.locations import Institution
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from utilities.files import save_image
@@ -18,8 +18,8 @@ class VerificationCrud(BaseCRUD):
         return query.options(
             selectinload(VerificationRequest.real_photo),
             selectinload(VerificationRequest.id_photo),
-            selectinload(VerificationRequest.institute).selectinload(
-                Institute.city),
+            selectinload(VerificationRequest.institution).selectinload(
+                Institution.city),
             selectinload(VerificationRequest.user)
         )
 
@@ -36,10 +36,10 @@ class VerificationCrud(BaseCRUD):
                                       .where(VerificationRequest.reviewed == False)))
         return query.scalars().first()
 
-    async def create_verification_request(self, institute_id: uuid.UUID, real_photo: UploadFile, id_photo: UploadFile, user: User) -> VerificationRequest:
+    async def create_verification_request(self, institution_id: uuid.UUID, real_photo: UploadFile, id_photo: UploadFile, user: User) -> VerificationRequest:
         real_photo_model = await save_image(db=self.db, upload_file=real_photo)
         id_photo_model = await save_image(db=self.db, upload_file=id_photo)
-        return await self.create(VerificationRequest(user_id=user.id, institute_id=institute_id, real_photo_id=real_photo_model.id, id_photo_id=id_photo_model.id))
+        return await self.create(VerificationRequest(user_id=user.id, institution_id=institution_id, real_photo_id=real_photo_model.id, id_photo_id=id_photo_model.id))
 
     async def update_verification_request(self, verification_request: VerificationRequest, approved: bool) -> VerificationRequest:
         verification_request.reviewed = True

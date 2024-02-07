@@ -42,6 +42,6 @@ async def delete_city(city_id: uuid.UUID, db=Depends(get_async_session)):
     db_city = await CitiesCrud(db).get_city(city_id=city_id)
     if not db_city:
         raise HTTPException(404, "City not found")
-    if await CitiesCrud(db).city_has_institutes(city_id=city_id):
+    if await CitiesCrud(db).city_has_institutions(city_id=city_id):
         raise HTTPException(400, "City has institutes")
     await CitiesCrud(db).delete(db_city)

@@ -1,10 +1,11 @@
+from datetime import datetime
 import uuid
 from fastapi_users.db import SQLAlchemyBaseUserTableUUID
 from db.db import Base
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import Boolean, Column, ForeignKey, String, DateTime, func
 from sqlalchemy.orm import relationship
-from models.locations import Institute
+from models.locations import Institution
 
 
 class User(SQLAlchemyBaseUserTableUUID, Base):
@@ -12,16 +13,20 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
 
     name = Column(String, nullable=False)
     register_date = Column(DateTime(timezone=True), server_default=func.now())
-    birthdate = Column(DateTime(timezone=True), nullable=True)
+    birthdate = Column(DateTime(timezone=True), nullable=False)
     image_id = Column(UUID(as_uuid=True), ForeignKey(
         'images.id', ondelete='SET NULL'), nullable=True)
     image = relationship("Image", foreign_keys=[
                          image_id], cascade="all,delete")
     discription = Column(String, nullable=False, default='')
     verified = Column(Boolean, nullable=False, default=False)
-    institute_id = Column(UUID(as_uuid=True), ForeignKey(
-        Institute.id), nullable=True)
-    institute = relationship(Institute, foreign_keys=[institute_id])
+    institution_id = Column(UUID(as_uuid=True), ForeignKey(
+        Institution.id), nullable=True)
+    institution = relationship(Institution, foreign_keys=[institution_id])
+
+    @property
+    def age(self) -> int | None:
+        return datetime.now().year - self.birthdate.year
 
 
 class UserLike(Base):

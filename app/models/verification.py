@@ -15,9 +15,9 @@ class VerificationRequest(Base):
     updated_date = Column(DateTime(timezone=True),
                           onupdate=func.now())
     reviewed = Column(Boolean, nullable=False, default=False)
-    institute_id = Column(UUID(as_uuid=True), ForeignKey(
-        'institutes.id'), nullable=False)
-    institute = relationship("Institute", foreign_keys=[institute_id])
+    institution_id = Column(UUID(as_uuid=True), ForeignKey(
+        'institutions.id'), nullable=False)
+    institution = relationship("Institution", foreign_keys=[institution_id])
     real_photo_id = Column(UUID(as_uuid=True), ForeignKey(
         'images.id'), nullable=False)
     real_photo = relationship("Image", foreign_keys=[

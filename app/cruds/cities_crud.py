@@ -1,6 +1,6 @@
 import uuid
 from cruds.base_crud import BaseCRUD
-from models.locations import City, Institute
+from models.locations import City, Institution
 from sqlalchemy.future import select
 
 
@@ -16,8 +16,8 @@ class CitiesCrud(BaseCRUD):
         query = await self.db.execute(select(City).where(City.id == city_id))
         return query.scalars().first()
 
-    async def city_has_institutes(self, city_id: uuid.UUID) -> bool:
-        query = await self.db.execute(select(Institute).where(Institute.city_id == city_id))
+    async def city_has_institutions(self, city_id: uuid.UUID) -> bool:
+        query = await self.db.execute(select(Institution).where(Institution.city_id == city_id))
         return query.scalars().first() is not None
 
     async def update_city(self, city: City, name: str) -> City:

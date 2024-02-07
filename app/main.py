@@ -9,11 +9,13 @@ from endpoints.files import api_router as files_router
 from endpoints.locations import locations_router
 from endpoints.verification import api_router as verification_router
 from endpoints.hobbies import api_router as hobbies_router
+from endpoints.likes import api_router as likes_router
 import models_events
 app = FastAPI()
 
 app.include_router(auth_router)
 app.include_router(users_router)
+app.include_router(likes_router)
 app.include_router(files_router)
 app.include_router(locations_router)
 app.include_router(verification_router)
