@@ -12,12 +12,15 @@ class BaseUserEmail(BaseModel):
     email: EmailStr
 
 
-class CustomUserFields(BaseModel):
+class CustomUserFieldsWithoutDates(BaseModel):
     name: str
-    birthdate: datetime | None = None
-    register_date: datetime
     discription: str = ''
     verified: bool
+
+
+class CustomUserFields(CustomUserFieldsWithoutDates):
+    birthdate: datetime | None = None
+    register_date: datetime
 
 
 class CustomUserFieldsRead(BaseModel):
@@ -32,7 +35,7 @@ class UserReadWithEmail(UserRead, BaseUserEmail):
     pass
 
 
-class UserReadShort(BaseUser, CustomUserFieldsRead):
+class UserReadShort(CustomUserFieldsRead, CustomUserFieldsWithoutDates):
     id: uuid.UUID
 
 
@@ -46,3 +49,10 @@ class UserCreate(BaseUserCreate, CustomUserFields):
 
 class UserUpdate(BaseUserUpdate, CustomUserFields):
     pass
+
+
+class UserLike(BaseModel):
+    user_id: uuid.UUID
+    liked_user_id: uuid.UUID
+    like: bool
+    is_match: bool = False

@@ -5,7 +5,7 @@ from sqlalchemy import select, or_, nulls_first
 from models.files import Image
 from cruds.base_crud import BaseCRUD
 from utilities.files import save_image
-from models.user import User
+from models.user import User, UserLike
 from schemas.users import UserUpdate
 from users_controller import get_user_manager_context
 
@@ -81,3 +81,23 @@ class UsersCrud(BaseCRUD):
         else:
             user = await self.update(user)
         return user
+
+    async def get_user_like(self, user: User, liked_user: User) -> UserLike:
+        query = await self.db.execute(select(UserLike).where(UserLike.user_id == user.id).where(UserLike.liked_user_id == liked_user.id))
+        return query.scalars().first()
+
+    async def set_user_like(self, user: User, liked_user: User, like: bool) -> UserLike:
+        user_like = await self.get_user_like(user, liked_user)
+        if user_like:
+            user_like.like = like
+            return await self.update(user_like)
+        return await self.create(UserLike(user_id=user.id, liked_user_id=liked_user.id, like=like))
+
+    async def check_match(self, user: User, liked_user: User) -> bool:
+        user_like = await self.get_user_like(user, liked_user)
+        if not user_like:
+            return False
+        liked_user_like = await self.get_user_like(liked_user, user)
+        if not liked_user_like:
+            return False
+        return user_like.like and liked_user_like.like

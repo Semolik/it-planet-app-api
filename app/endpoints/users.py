@@ -2,7 +2,7 @@ from typing import List, Literal, Union
 import uuid
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from cruds.users_cruds import UsersCrud
-from schemas.users import UserRead, UserUpdate, UserReadWithEmail
+from schemas.users import UserLike, UserRead, UserReadShort, UserUpdate, UserReadWithEmail
 from schemas.files import ImageInfo
 from users_controller import current_active_user, current_superuser
 from db.db import get_async_session
@@ -91,6 +91,42 @@ async def get_user(
     if current_user.is_superuser:
         return UserReadWithEmail.model_validate(user)
     return UserRead.model_validate(user)
+
+
+@api_router.post("/{user_id}/like", response_model=UserLike)
+async def like_user(
+    user_id: uuid.UUID,
+    db=Depends(get_async_session),
+    current_user: User = Depends(current_active_user)
+):
+    users_crud = UsersCrud(db)
+    user = await users_crud.get_user_by_id(user_id)
+    if user is None:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+    if user.id == current_user.id:
+        raise HTTPException(
+            status_code=400, detail="Нельзя лайкнуть самого себя")
+    user_like = await users_crud.set_user_like(user=current_user, liked_user=user, like=True)
+    like_info = UserLike.model_validate(user_like, from_attributes=True)
+    like_info.is_match = await users_crud.check_match(user=current_user, liked_user=user)
+    return like_info
+
+
+@api_router.post("/{user_id}/dislike", response_model=UserLike)
+async def dislike_user(
+    user_id: uuid.UUID,
+    db=Depends(get_async_session),
+    current_user: User = Depends(current_active_user)
+):
+    users_crud = UsersCrud(db)
+    user = await users_crud.get_user_by_id(user_id)
+    if user is None:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+    if user.id == current_user.id:
+        raise HTTPException(
+            status_code=400, detail="Нельзя дизлайкнуть самого себя")
+    user_like = await users_crud.set_user_like(user=current_user, liked_user=user, like=False)
+    return user_like
 
 
 @api_router.get("", response_model=List[UserReadWithEmail])

@@ -16,10 +16,39 @@ async def create_hobby(name: str, db=Depends(get_async_session)):
     return await HobbiesCrud(db).create_hobby(name=name)
 
 
+@api_router.get("/my", response_model=List[Hobby])
+async def get_my_hobbies(db=Depends(get_async_session), current_user=Depends(current_active_user)):
+    '''Возвращает список хобби, которыми занимается текущий пользователь.'''
+    return await HobbiesCrud(db).get_user_hobbies(current_user.id)
+
+
+@api_router.post("/my/{hobby_id}", response_model=Hobby)
+async def add_my_hobby(hobby_id: uuid.UUID, db=Depends(get_async_session), current_user=Depends(current_active_user)):
+    '''Добавляет хобби пользователю.'''
+    hobby = await HobbiesCrud(db).get_hobby(hobby_id)
+    if not hobby:
+        raise HTTPException(status_code=404, detail="Хобби не найдено")
+    user_hobby = await HobbiesCrud(db).get_user_hobby(user=current_user, hobby=hobby)
+    if not user_hobby:
+        await HobbiesCrud(db).add_user_hobby(user=current_user, hobby=hobby)
+    return hobby
+
+
+@api_router.delete("/my/{hobby_id}", status_code=204)
+async def delete_my_hobby(hobby_id: uuid.UUID, db=Depends(get_async_session), current_user=Depends(current_active_user)):
+    '''Удаляет хобби у пользователя.'''
+    hobby = await HobbiesCrud(db).get_hobby(hobby_id)
+    if not hobby:
+        raise HTTPException(status_code=404, detail="Хобби не найдено")
+    user_hobby = await HobbiesCrud(db).get_user_hobby(user=current_user, hobby=hobby)
+    if user_hobby:
+        await HobbiesCrud(db).delete(user_hobby)
+
+
 @api_router.get("", response_model=List[Hobby])
 async def get_hobbies(page: int = Query(ge=1), query: str = None, db=Depends(get_async_session)):
     '''Возвращает список хобби, отсортированный по количеству пользователей, занимающихся этим хобби.'''
-    return await HobbiesCrud(db).get_hobbies(page=page,hobby_query = query)
+    return await HobbiesCrud(db).get_hobbies(page=page, hobby_query=query)
 
 
 @api_router.put("/{hobby_id}", response_model=Hobby, dependencies=[Depends(current_superuser)])
@@ -45,4 +74,3 @@ async def delete_hobby(hobby_id: uuid.UUID, db=Depends(get_async_session)):
     if not hobby:
         raise HTTPException(status_code=404, detail="Хобби не найдено")
     await HobbiesCrud(db).delete(hobby)
-    
