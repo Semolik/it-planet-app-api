@@ -6,7 +6,7 @@ from models.files import Image
 from cruds.base_crud import BaseCRUD
 from utilities.files import save_image
 from models.user import User, UserLike
-from schemas.users import UserUpdate
+from schemas.users import UserLikeFull, UserUpdate
 from users_controller import get_user_manager_context
 
 
@@ -110,16 +110,41 @@ class UsersCrud(BaseCRUD):
             select(User)
             .join(UserLike, UserLike.liked_user_id == User.id)
             .where(
-                and_(
-                    UserLike.user_id == user_id,
-                    UserLike.like == True,
-                    UserLike.liked_user_id.in_(
-                        select(UserLike.user_id).where(
-                            UserLike.liked_user_id == user_id, UserLike.like == True)
+                UserLike.user_id == user_id,
+                UserLike.like == True,
+                UserLike.liked_user_id.in_(
+                    select(UserLike.user_id).where(
+                        UserLike.liked_user_id == user_id,
+                        UserLike.like == True
                     )
                 )
             )
+            .order_by(UserLike.like_date.desc())
             .slice(start, end)
         )
 
         return query.scalars().all()
+
+    async def get_user_likes(self, user: User, page: int = 1, page_size: int = 20) -> list[UserLikeFull]:
+        user_id = user.id
+        end = page * page_size
+        start = end - page_size
+        subquery = select(UserLike.like).where(
+            and_(
+                UserLike.user_id == UserLike.liked_user_id,
+                UserLike.user_id == user_id,
+                UserLike.like == True
+            )
+        ).as_scalar()
+        query = await self.db.execute(
+            select(User, subquery)
+            .join(UserLike, UserLike.liked_user_id == User.id)
+            .where(UserLike.user_id == user_id)
+            .options(
+                selectinload(User.image)
+            )
+            .order_by(UserLike.like_date.desc())
+            .slice(start, end)
+        )
+
+        return [UserLikeFull(is_match=is_match is not None, liked_user=user) for user, is_match in query.all()]

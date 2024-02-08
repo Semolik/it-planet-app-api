@@ -39,6 +39,9 @@ class UserReadWithEmail(UserRead, BaseUserEmail):
 class UserReadShort(CustomUserFieldsRead, CustomUserFieldsWithoutDates):
     id: uuid.UUID
 
+    class Config:
+        from_attributes = True
+
 
 class UserReadShortWithEmail(UserReadShort, BaseUserEmail):
     pass
@@ -57,3 +60,8 @@ class UserLike(BaseModel):
     liked_user_id: uuid.UUID
     like: bool
     is_match: bool = False
+
+
+class UserLikeFull(BaseModel):
+    is_match: bool = False
+    liked_user: UserReadShort

@@ -26,7 +26,11 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
 
     @property
     def age(self) -> int | None:
-        return datetime.now().year - self.birthdate.year
+        today = datetime.now().date()
+        age = today.year - self.birthdate.year
+        if today.month < self.birthdate.month or (today.month == self.birthdate.month and today.day < self.birthdate.day):
+            age -= 1
+        return age
 
 
 class UserLike(Base):
