@@ -1,7 +1,7 @@
 import uuid
 from fastapi import UploadFile
 from sqlalchemy.orm import selectinload
-from sqlalchemy import select, or_, nulls_first
+from sqlalchemy import select, or_, nulls_first, and_
 from models.files import Image
 from cruds.base_crud import BaseCRUD
 from utilities.files import save_image
@@ -104,16 +104,22 @@ class UsersCrud(BaseCRUD):
 
     async def get_matches(self, user: User, page: int = 1, page_size: int = 20) -> list[User]:
         user_id = user.id
-        query = await self.db.execute(select(UserLike).where(
-            (UserLike.user_id == user_id) &
-            (UserLike.like == True) &  # пользователь поставил лайк
-            (UserLike.liked_user_id.in_(
-                select(UserLike.user_id).where(
-                    (UserLike.user_id == UserLike.liked_user_id) &  # это пара лайков
-                    # нас лайкнул другой пользователь
-                    (UserLike.liked_user_id == user_id) &
-                    (UserLike.like == True)  # и мы его лайкнули
+        end = page * page_size
+        start = end - page_size
+        query = await self.db.execute(
+            select(User)
+            .join(UserLike, UserLike.liked_user_id == User.id)
+            .where(
+                and_(
+                    UserLike.user_id == user_id,
+                    UserLike.like == True,
+                    UserLike.liked_user_id.in_(
+                        select(UserLike.user_id).where(
+                            UserLike.liked_user_id == user_id, UserLike.like == True)
+                    )
                 )
-            ))
-        ).options(selectinload(UserLike.liked_user)))
-        result = query.scalars().all()
+            )
+            .slice(start, end)
+        )
+
+        return query.scalars().all()
