@@ -1,7 +1,9 @@
+from typing import List
 import uuid
 from fastapi import UploadFile
 from sqlalchemy.orm import selectinload
 from sqlalchemy import select, or_, nulls_first, and_
+from models.hobbies import Hobby,UserHobby
 from models.files import Image
 from cruds.base_crud import BaseCRUD
 from utilities.files import save_image
@@ -148,3 +150,15 @@ class UsersCrud(BaseCRUD):
         )
 
         return [UserLikeFull(is_match=is_match is not None, liked_user=user) for user, is_match in query.all()]
+    
+    async def get_recommended_user(self, user: User, hobbies_ids: List[uuid.UUID], institutions_ids: List[uuid.UUID]):
+        query = select(User)
+        if len(hobbies_ids) >= 1:
+            query = query.join(UserHobby, User.id == UserHobby.user_id).where(UserHobby.hobby_id.in_(hobbies_ids))
+        if len(institutions_ids) >= 1:
+            query = query.where(User.institution_id.in_(institutions_ids))
+        query = query.where(User.id != user.id)
+        result = await self.db.execute(query)
+        return result.scalars().first()
+        
+        

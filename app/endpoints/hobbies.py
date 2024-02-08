@@ -60,7 +60,7 @@ async def update_hobby(hobby_id: uuid.UUID, name: str, db=Depends(get_async_sess
 
 
 @api_router.get("/{hobby_id}", response_model=Hobby)
-async def get_hobby(hobby_id: uuid.UUID):
+async def get_hobby(hobby_id: uuid.UUID,db=Depends(get_async_session)):
     '''Возвращает хобби по его id.'''
     hobby = await HobbiesCrud().get_hobby(hobby_id)
     if not hobby:

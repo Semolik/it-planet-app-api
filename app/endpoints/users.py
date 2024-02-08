@@ -1,8 +1,10 @@
 from typing import List, Literal, Union
 import uuid
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
+from cruds.institutions_crud import InstitutionsCrud
+from cruds.hobbies_crud import HobbiesCrud
 from cruds.users_cruds import UsersCrud
-from schemas.users import UserLike, UserRead,  UserUpdate, UserReadWithEmail
+from schemas.users import UserLike, UserRead, UserReadShort,  UserUpdate, UserReadWithEmail
 from schemas.files import ImageInfo
 from users_controller import current_active_user, current_superuser
 from db.db import get_async_session
@@ -78,6 +80,25 @@ async def get_user_me(
 ):
     return await UsersCrud(db).get_user_by_id(current_user.id)
 
+@api_router.get("/recommended",response_model=UserReadShort)
+async def get_recommended(
+    hobbies_ids: List[uuid.UUID] = Query([]),
+    institutions_ids: List[uuid.UUID] = Query([]),
+    db=Depends(get_async_session),
+    current_user: User = Depends(current_active_user)
+):
+    for hobby_id in hobbies_ids:
+        hobby = await HobbiesCrud(db).get_hobby(hobby_id)
+        if not hobby:
+            raise HTTPException(status_code=404, detail="Хобби не найдено")
+        
+    for institution_id in institutions_ids:
+        institution = await InstitutionsCrud(db).get_institution(institution_id=institution_id)
+        if not institution:
+            raise HTTPException(404, "Образовательное учреждение не найдено")
+    return await UsersCrud(db).get_recommended_user(user = current_user, hobbies_ids= hobbies_ids, institutions_ids = institutions_ids)
+
+        
 
 @api_router.get("/{user_id}", response_model=Union[UserReadWithEmail, UserRead])
 async def get_user(
