@@ -6,6 +6,8 @@ from models.locations import *
 from models.user import *
 from models.files import *
 from models.verification import *
+from models.hobbies import *
+from models.chats import *
 
 from os import getenv
 from alembic import context
