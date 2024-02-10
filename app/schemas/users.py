@@ -18,6 +18,11 @@ class CustomUserFieldsWithoutDates(BaseModel):
     verified: bool
 
 
+class ChageOnApproveUserData(BaseModel):
+    name: str
+    birthdate: datetime
+
+
 class CustomUserFields(CustomUserFieldsWithoutDates):
     birthdate: datetime | None = None
     register_date: datetime

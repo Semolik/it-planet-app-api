@@ -28,6 +28,14 @@ def get_image_link(image_id: UUID) -> str:
     return f'/images/{image_id}'
 
 
+async def duplicate_image(db: AsyncSession, image: Image) -> Image:
+    image_model = await BaseCRUD(db).create(Image())
+    image_path = await get_image_path(image=image)
+    new_image_path = await get_image_path(image=image_model)
+    shutil.copy(image_path, new_image_path)
+    return image_model
+
+
 async def save_image(db: AsyncSession,  upload_file: UploadFile, resize_image_options=(400, 400),
                      detail_error_message="поврежденное изображение") -> Image:
 

@@ -3,7 +3,12 @@ import uuid
 from pydantic import BaseModel
 from schemas.files import ImageLink
 from schemas.locations import Institution
-from schemas.users import UserRead
+from schemas.users import ChageOnApproveUserData, UserRead
+
+
+class CreateVerificationRequest(BaseModel):
+    institution_id: uuid.UUID
+    user_data: ChageOnApproveUserData
 
 
 class VerificationRequest(BaseModel):

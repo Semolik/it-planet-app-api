@@ -1,6 +1,6 @@
 from db.db import Base
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy import Boolean, Column, ForeignKey, DateTime, func
+from sqlalchemy import Boolean, Column, ForeignKey, DateTime, String, func
 from uuid import uuid4
 from sqlalchemy.orm import relationship
 
@@ -15,6 +15,8 @@ class VerificationRequest(Base):
     updated_date = Column(DateTime(timezone=True),
                           onupdate=func.now())
     reviewed = Column(Boolean, nullable=False, default=False)
+    name = Column(String, nullable=False)
+    birthdate = Column(DateTime, nullable=False)
     institution_id = Column(UUID(as_uuid=True), ForeignKey(
         'institutions.id'), nullable=False)
     institution = relationship("Institution", foreign_keys=[institution_id])

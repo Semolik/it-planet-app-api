@@ -5,7 +5,7 @@ from fastapi.params import Query
 from fastapi_mail import FastMail, MessageSchema, MessageType
 from cruds.verification_crud import VerificationCrud
 from cruds.institutions_crud import InstitutionsCrud
-from schemas.verification import VerificationRequest
+from schemas.verification import CreateVerificationRequest, VerificationRequest
 from users_controller import current_superuser, current_active_user
 from db.db import get_async_session
 from mail.conf import conf
@@ -38,7 +38,7 @@ async def get_verification_request(verification_request_id: uuid.UUID, db=Depend
 
 @api_router.post("", response_model=VerificationRequest)
 async def create_verification_request(
-    institution_id: uuid.UUID,
+    request: CreateVerificationRequest,
     real_photo:  UploadFile = File(
         default=..., description='Реальное фото пользователя'),
     id_photo:  UploadFile = File(
@@ -51,10 +51,16 @@ async def create_verification_request(
     has_active_request = await VerificationCrud(db).last_active_verification_request(user=current_user)
     if has_active_request:
         raise HTTPException(400, "Вы уже отправили запрос на верификацию")
-    institution = await InstitutionsCrud(db).get_institution(institution_id=institution_id)
+    institution = await InstitutionsCrud(db).get_institution(institution_id=request.institution_id)
     if not institution:
         raise HTTPException(404, "Институт не найден")
-    created_request = await VerificationCrud(db).create_verification_request(institution_id=institution_id, real_photo=real_photo, id_photo=id_photo, user=current_user)
+    created_request = await VerificationCrud(db).create_verification_request(
+        institution_id=request.institution_id,
+        real_photo=real_photo,
+        id_photo=id_photo,
+        user=current_user,
+        user_data=request.user_data
+    )
     return await VerificationCrud(db).get_verification_request(verification_request_id=created_request.id)
 
 
