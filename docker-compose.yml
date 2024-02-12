@@ -10,7 +10,10 @@ services:
     env_file:
       - .env
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
   db:
     env_file:
       - .env
@@ -19,9 +22,22 @@ services:
       - "5432:5432"
     healthcheck:
       test: [ "CMD", "pg_isready", "-U", "postgres" ]
-      interval: 5s
+      interval: 1s
       timeout: 5s
-      retries: 5
+      retries: 30
+
+  rabbitmq:
+    image: "rabbitmq:3"
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    env_file:
+      - .env
+    healthcheck:
+      test: rabbitmq-diagnostics check_port_connectivity
+      interval: 1s
+      timeout: 3s
+      retries: 30
 
   smtp4dev:
     image: rnwood/smtp4dev:v3

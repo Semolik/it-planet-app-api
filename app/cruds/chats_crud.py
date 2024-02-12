@@ -30,8 +30,10 @@ class ChatsCrud(BaseCRUD):
         )
         return query.scalars().first()
 
-    async def create_chat(self, user_id_1: uuid.UUID, user_id_2: uuid.UUID):
-        return await self.create(Chat(user_id_1=user_id_1, user_id_2=user_id_2))
+    async def create_chat(self, from_user_id: uuid.UUID, to_user_id: uuid.UUID, message: str):
+        chat = await self.create(Chat(user_id_1=from_user_id, user_id_2=to_user_id))
+        await self.create(Message(chat_id=chat.id, from_user_id=from_user_id, content=message))
+        return chat
 
     async def get_chat(self, chat_id: uuid.UUID):
         query = await self.db.execute(

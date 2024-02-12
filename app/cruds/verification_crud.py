@@ -58,10 +58,5 @@ class VerificationCrud(BaseCRUD):
         if approved:
             user.name = verification_request.name
             user.birthdate = verification_request.birthdate
-            new_profile_image = duplicate_image(
-                db=self.db, image=verification_request.real_photo)
-            if user.image_id:
-                await self.delete(user.image)
-            user.image_id = new_profile_image.id
         await self.update(user)
         return await self.update(verification_request)
