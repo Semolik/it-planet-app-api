@@ -19,4 +19,9 @@ class Chat(BaseModel):
     user_id_1: UUID
     user_id_2: UUID
     creation_date: datetime
-    last_message: Message | None = None
+    last_message: Message
+
+
+class ChatWithUsers(Chat):
+    user_1: UserReadShort
+    user_2: UserReadShort

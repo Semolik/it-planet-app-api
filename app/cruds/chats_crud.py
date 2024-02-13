@@ -23,7 +23,8 @@ class ChatsCrud(BaseCRUD):
             .where((Chat.user_id_1 == user_id) | (Chat.user_id_2 == user_id))
             .order_by(subquery.c.max_creation_date.desc())
             .slice(start, end)
-            .options(selectinload(Chat.last_message).selectinload(Message.from_user))
+            .options(selectinload(Chat.last_message).selectinload(Message.from_user), selectinload(Chat.user_1),
+                     selectinload(Chat.user_2))
         )
         return query.scalars().all()
 
@@ -47,8 +48,11 @@ class ChatsCrud(BaseCRUD):
     async def get_chat(self, chat_id: uuid.UUID):
         query = await self.db.execute(
             select(Chat).where(Chat.id == chat_id).options(
-                selectinload(Chat.last_message).selectinload(Message.from_user))
-        )
+                selectinload(Chat.last_message).selectinload(
+                    Message.from_user),
+                selectinload(Chat.user_1),
+                selectinload(Chat.user_2)
+            ))
         return query.scalars().first()
 
     async def get_chat_by_users(self, user_id_1: uuid.UUID, user_id_2: uuid.UUID):

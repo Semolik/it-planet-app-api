@@ -1,11 +1,12 @@
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, WebSocket, WebSocketDisconnect
+from cruds.users_cruds import UsersCrud
 from utilities.websockets import get_user_from_cookie
 from users_controller import current_active_user, optional_current_user
 from db.db import get_async_session
 from cruds.chats_crud import ChatsCrud
 from uuid import UUID
-from schemas.chats import Chat, Message
+from schemas.chats import Chat, ChatWithUsers, Message
 from notifier import Notifier, get_notifier
 
 notifier = Notifier()
@@ -13,7 +14,7 @@ notifier = Notifier()
 api_router = APIRouter(tags=["chats"], prefix="/chats")
 
 
-@api_router.get("", response_model=List[Chat])
+@api_router.get("", response_model=List[ChatWithUsers])
 async def get_chats(page: int = Query(ge=1), db=Depends(get_async_session), current_user=Depends(current_active_user)):
     '''Возвращает список чатов пользователя.'''
     return await ChatsCrud(db).get_user_chats(user_id=current_user.id, page=page)
@@ -29,7 +30,7 @@ async def create_chat(message: str, user_id: UUID = Query(..., description='ID �
     return await ChatsCrud(db).get_chat(chat_id=db_chat.id)
 
 
-@api_router.get("/{chat_id}", response_model=Chat)
+@api_router.get("/{chat_id}", response_model=ChatWithUsers)
 async def get_chat(chat_id: UUID = Path(..., description='ID чата'), db=Depends(get_async_session), current_user=Depends(current_active_user)):
     '''Возвращает чат по его ID.'''
     db_chat = await ChatsCrud(db).get_chat(chat_id=chat_id)
