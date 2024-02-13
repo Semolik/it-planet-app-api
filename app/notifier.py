@@ -5,7 +5,6 @@ from typing import Dict
 import uuid
 from aio_pika import IncomingMessage, Message, connect
 from fastapi import WebSocket
-
 from typing import Dict
 
 
@@ -18,6 +17,7 @@ class Notifier:
             cls._instance.connections = {}
             cls._instance.is_ready = False
             cls._instance.channel = None
+            cls._instance.prefix = ""
         return cls._instance
 
     async def setup(self):
@@ -57,7 +57,7 @@ class Notifier:
     async def consume_messages(self, user_id: str, queue):
         async for message in queue:
             await self._notify(user_id, message)
-            await message.ack()  # Подтверждение получения сообщения
+            await message.ack()
 
     def remove(self, user_id: uuid.UUID, websocket: WebSocket):
         user_id_str = str(user_id)
@@ -68,7 +68,7 @@ class Notifier:
         while len(self.connections[user_id]) > 0:
             websocket = self.connections[user_id].pop()
             data = json.loads(message.body.decode("utf-8"))
-            await websocket.send_json(data)
+            await websocket.send_text(data)
             living_connections.append(websocket)
         self.connections[user_id] = living_connections
 
@@ -76,5 +76,9 @@ class Notifier:
 notifier = Notifier()
 
 
-def get_notifier():
-    return notifier
+def get_notifier(prefix):
+
+    def get_with_prefix():
+        notifier.prefix = prefix
+        return notifier
+    return get_with_prefix

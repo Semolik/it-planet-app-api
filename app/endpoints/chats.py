@@ -39,7 +39,7 @@ async def get_chat(chat_id: UUID = Path(..., description='ID чата'), db=Depe
 
 
 @api_router.post("/{chat_id}/messages", response_model=Message)
-async def send_message(chat_id: UUID = Path(..., description='ID чата'), content: UUID = Query(..., description='Текст сообщения'), db=Depends(get_async_session), current_user=Depends(current_active_user)):
+async def send_message(content: str, chat_id: UUID = Path(..., description='ID чата'), db=Depends(get_async_session), current_user=Depends(current_active_user)):
     '''Отправляет сообщение в чат.'''
     db_chat = await ChatsCrud(db).get_chat(chat_id=chat_id)
     if not db_chat:
@@ -48,11 +48,9 @@ async def send_message(chat_id: UUID = Path(..., description='ID чата'), con
         raise HTTPException(
             status_code=403, detail='У вас нет доступа к этому чату')
     db_message = await ChatsCrud(db).create_message(chat_id=chat_id, from_user_id=current_user.id, content=content)
-    if not notifier.is_ready:
-        await notifier.setup("test")
-    await notifier.push(f"! Push notification: {content} !")
-
-    return Message(**db_message.__dict__, from_user=current_user)
+    message_obj = Message(**db_message.__dict__, from_user=current_user)
+    await notifier.push(user_id=db_message.get_to_user_id(from_user_id=current_user.id), data=message_obj.model_dump_json())
+    return message_obj
 
 
 @api_router.get("/{chat_id}/messages", response_model=List[Message])
@@ -68,7 +66,7 @@ async def get_messages(chat_id: UUID = Path(..., description='ID чата'), pag
 
 
 @api_router.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket, current_user=Depends(get_user_from_cookie), notifier: Notifier = Depends(get_notifier)):
+async def websocket_endpoint(websocket: WebSocket, current_user=Depends(get_user_from_cookie), notifier: Notifier = Depends(get_notifier('chats'))):
     try:
         await notifier.connect(user_id=current_user.id, websocket=websocket)
         while True:
@@ -79,5 +77,5 @@ async def websocket_endpoint(websocket: WebSocket, current_user=Depends(get_user
 
 
 @api_router.post("/push")
-async def push_to_connected_websockets(data: dict,  current_user=Depends(current_active_user), notifier: Notifier = Depends(get_notifier)):
+async def push_to_connected_websockets(data: dict,  current_user=Depends(current_active_user), notifier: Notifier = Depends(get_notifier('chats'))):
     await notifier.push(current_user.id, data=data)

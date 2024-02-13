@@ -4,17 +4,26 @@ from cruds.base_crud import BaseCRUD
 from models.chats import Chat, Message
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
+from sqlalchemy import and_, func
 
 
 class ChatsCrud(BaseCRUD):
     async def get_user_chats(self, user_id: uuid.UUID, page: int, page_size: int = 10):
         end = page * page_size
         start = end - page_size
+        subquery = select(
+            Message.chat_id,
+            func.max(Message.creation_date).label('max_creation_date')
+        ).group_by(Message.chat_id).subquery()
+
         query = await self.db.execute(
-            select(Chat).join(Message, Chat.id == Message.chat_id)
+            select(Chat)
+            .join(subquery, and_(Chat.id == subquery.c.chat_id))
+            .join(Message, and_(Message.chat_id == Chat.id, Message.creation_date == subquery.c.max_creation_date))
             .where((Chat.user_id_1 == user_id) | (Chat.user_id_2 == user_id))
-            .order_by(Message.creation_date.desc())
-            .slice(start, end).options(selectinload(Chat.last_message).selectinload(Message.from_user))
+            .order_by(subquery.c.max_creation_date.desc())
+            .slice(start, end)
+            .options(selectinload(Chat.last_message).selectinload(Message.from_user))
         )
         return query.scalars().all()
 

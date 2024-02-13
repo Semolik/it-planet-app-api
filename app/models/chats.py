@@ -17,10 +17,9 @@ class Chat(Base):
     creation_date = Column(DateTime(timezone=True), server_default=func.now())
     last_message = relationship(
         "Message",
-        primaryjoin="Message.chat_id == Chat.id",
+        primaryjoin="and_(Message.chat_id == Chat.id, Message.creation_date == select(func.max(Message.creation_date)).where(Message.chat_id == Chat.id).correlate(Chat).as_scalar())",
         uselist=False,
-        viewonly=True,
-        order_by="desc(Message.creation_date)"
+        viewonly=True
     )
 
 
@@ -42,3 +41,6 @@ class Message(Base):
 
     def can_read(self, user_id: UUID):
         return user_id == self.chat.user_id_1 or user_id == self.chat.user_id_2
+
+    def get_to_user_id(self, from_user_id: UUID):
+        return self.chat.user_id_1 if from_user_id == self.chat.user_id_2 else self.chat.user_id_2
