@@ -1,5 +1,6 @@
 from datetime import datetime
 import uuid
+from models.user import User
 from cruds.base_crud import BaseCRUD
 from models.chats import Chat, Message
 from sqlalchemy.future import select
@@ -23,8 +24,8 @@ class ChatsCrud(BaseCRUD):
             .where((Chat.user_id_1 == user_id) | (Chat.user_id_2 == user_id))
             .order_by(subquery.c.max_creation_date.desc())
             .slice(start, end)
-            .options(selectinload(Chat.last_message).selectinload(Message.from_user), selectinload(Chat.user_1),
-                     selectinload(Chat.user_2))
+            .options(selectinload(Chat.last_message).selectinload(Message.from_user),  selectinload(Chat.user_1).selectinload(User.image),
+                     selectinload(Chat.user_2).selectinload(User.image))
         )
         return query.scalars().all()
 
@@ -50,8 +51,8 @@ class ChatsCrud(BaseCRUD):
             select(Chat).where(Chat.id == chat_id).options(
                 selectinload(Chat.last_message).selectinload(
                     Message.from_user),
-                selectinload(Chat.user_1),
-                selectinload(Chat.user_2)
+                selectinload(Chat.user_1).selectinload(User.image),
+                selectinload(Chat.user_2).selectinload(User.image)
             ))
         return query.scalars().first()
 
@@ -64,7 +65,7 @@ class ChatsCrud(BaseCRUD):
         )
         return query.scalars().first()
 
-    async def create_message(self, chat_id: uuid.UUID, from_user_id: uuid.UUID, content: str):
+    async def create_message(self, chat_id: uuid.UUID, from_user_id: uuid.UUID, content: str) -> Message:
         return await self.create(Message(chat_id=chat_id, from_user_id=from_user_id, content=content))
 
     async def get_messages(self, chat_id: uuid.UUID, page: int, page_size: int = 10):
