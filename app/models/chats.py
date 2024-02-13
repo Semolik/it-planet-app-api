@@ -17,7 +17,7 @@ class Chat(Base):
     creation_date = Column(DateTime(timezone=True), server_default=func.now())
     last_message = relationship(
         "Message",
-        primaryjoin="and_(Message.chat_id == Chat.id, Message.creation_date == select(func.max(Message.creation_date)).where(Message.chat_id == Chat.id).correlate(Chat).as_scalar())",
+        primaryjoin="and_(Message.chat_id == Chat.id, Message.creation_date == select(func.max(Message.creation_date)).where(Message.chat_id == Chat.id).correlate(Chat).scalar_subquery())",
         uselist=False,
         viewonly=True
     )

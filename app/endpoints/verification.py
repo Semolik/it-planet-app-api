@@ -3,6 +3,8 @@ import uuid
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.params import Query
 from fastapi_mail import FastMail, MessageSchema, MessageType
+from utilities.notifications import send_notification
+from notifier import Notifier, get_notifier
 from cruds.verification_crud import VerificationCrud
 from cruds.institutions_crud import InstitutionsCrud
 from schemas.verification import CreateVerificationRequest, VerificationRequest
@@ -44,7 +46,7 @@ async def create_verification_request(
     id_photo:  UploadFile = File(
         default=..., description='Фото документа пользователя'),
     db=Depends(get_async_session),
-    current_user=Depends(current_active_user)
+    current_user=Depends(current_active_user), notifier: Notifier = Depends(get_notifier('chats'))
 ):
     if current_user.verified:
         raise HTTPException(400, "Вы уже верифицированы")
@@ -81,16 +83,20 @@ async def update_verification_request(verification_request_id: uuid.UUID, approv
     if not verification_request:
         raise HTTPException(404, "Запрос на верификацию не найден")
     request = await VerificationCrud(db).update_verification_request(verification_request=verification_request, approved=approved)
+    message_title = 'Верификация аккаунта'
+    message_text = f"Ваш запрос на верификацию прошел {'успешно' if approved else 'неудачно'}"
+    await send_notification(
+        user_id=request.user.id,
+        title=message_title,
+        text=message_text,
+        db=db,
+    )
     message = MessageSchema(
         subject='Верификация аккаунта',
         recipients=[request.user.email],
         template_body={
-                'title': 'Верификация аккаунта',
-                'text': f'''<p>Здравствуйте, {request.user.name}</p>
-                            <p>
-                                Ваш запрос на верификацию прошел {'успешно' if approved else 'неудачно'}
-                            </p>
-                            '''
+                'title': message_title,
+                'text': f'''<p>Здравствуйте, {request.user.name}</p><p>{message_text}</p>'''
         },
         subtype=MessageType.html
     )

@@ -78,7 +78,7 @@ notifier = Notifier()
 
 def get_notifier(prefix):
 
-    def get_with_prefix():
+    def get_with_prefix() -> Notifier:
         notifier.prefix = prefix
         return notifier
     return get_with_prefix

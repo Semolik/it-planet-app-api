@@ -1,6 +1,7 @@
 from typing import List, Literal, Union
 import uuid
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
+from utilities.notifications import send_notification
 from cruds.institutions_crud import InstitutionsCrud
 from cruds.hobbies_crud import HobbiesCrud
 from cruds.users_cruds import UsersCrud
@@ -80,7 +81,8 @@ async def get_user_me(
 ):
     return await UsersCrud(db).get_user_by_id(current_user.id)
 
-@api_router.get("/recommended",response_model=UserReadShort)
+
+@api_router.get("/recommended", response_model=UserReadShort)
 async def get_recommended(
     hobbies_ids: List[uuid.UUID] = Query([]),
     institutions_ids: List[uuid.UUID] = Query([]),
@@ -91,14 +93,13 @@ async def get_recommended(
         hobby = await HobbiesCrud(db).get_hobby(hobby_id)
         if not hobby:
             raise HTTPException(status_code=404, detail="Хобби не найдено")
-        
+
     for institution_id in institutions_ids:
         institution = await InstitutionsCrud(db).get_institution(institution_id=institution_id)
         if not institution:
             raise HTTPException(404, "Образовательное учреждение не найдено")
-    return await UsersCrud(db).get_recommended_user(user = current_user, hobbies_ids= hobbies_ids, institutions_ids = institutions_ids)
+    return await UsersCrud(db).get_recommended_user(user=current_user, hobbies_ids=hobbies_ids, institutions_ids=institutions_ids)
 
-        
 
 @api_router.get("/{user_id}", response_model=Union[UserReadWithEmail, UserRead])
 async def get_user(
@@ -130,6 +131,13 @@ async def like_user(
     user_like = await users_crud.set_user_like(user=current_user, liked_user=user, like=True)
     like_info = UserLike.model_validate(user_like, from_attributes=True)
     like_info.is_match = await users_crud.check_match(user=current_user, liked_user=user)
+    if like_info.is_match:
+        await send_notification(
+            user_id=user.id,
+            title="Новый лайк",
+            text=f"Пользователь {current_user.name} лайкнул вас в ответ",
+            db=db
+        )
     return like_info
 
 
