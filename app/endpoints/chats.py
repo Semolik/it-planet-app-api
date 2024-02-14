@@ -46,12 +46,16 @@ async def send_message(content: str, chat_id: UUID = Path(..., description='ID �
         raise HTTPException(
             status_code=403, detail='У вас нет доступа к этому чату')
     db_message = await ChatsCrud(db).create_message(chat_id=chat_id, from_user_id=current_user.id, content=content)
+    db_message = await ChatsCrud(db).get_message(message_id=db_message.id)
+    db_chat.last_message = db_message
     await notifier.push(
         user_id=db_message.get_to_user_id(from_user_id=current_user.id),
         data=ChatWithUsers.model_validate(
-            db_chat, from_attributes=True).model_dump_json()
+            db_chat,
+            from_attributes=True
+        ).model_dump_json()
     )
-    return Message(**db_message.__dict__, from_user=current_user)
+    return db_message
 
 
 @api_router.get("/{chat_id}/messages", response_model=List[Message])
