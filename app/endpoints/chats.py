@@ -1,7 +1,8 @@
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, WebSocket, WebSocketDisconnect
+from utilities.chats import set_chat_info
 from utilities.websockets import get_user_from_cookie
-from users_controller import current_active_user, optional_current_user
+from users_controller import current_active_user
 from db.db import get_async_session
 from cruds.chats_crud import ChatsCrud
 from uuid import UUID
@@ -19,7 +20,8 @@ async def get_chats(
     current_user=Depends(current_active_user)
 ):
     '''Возвращает список чатов пользователя.'''
-    return await ChatsCrud(db).get_user_chats(user_id=current_user.id, page=page, search_query=query, current_user_id=current_user.id)
+    chats = await ChatsCrud(db).get_user_chats(user_id=current_user.id, page=page, search_query=query)
+    return [set_chat_info(chat=chat, unread_count=unread_count) for chat, unread_count in chats]
 
 
 @api_router.post("", response_model=Chat)
@@ -39,7 +41,8 @@ async def get_chat(chat_id: UUID = Path(..., description='ID чата'), db=Depe
     if not db_chat:
         raise HTTPException(status_code=404, detail='Чат не найден')
     db_chat.current_user_id = current_user.id
-    return db_chat
+    unreaded = await ChatsCrud(db).get_unread_count(user_id=current_user.id, chat_id=chat_id)
+    return set_chat_info(chat=db_chat, unread_count=unreaded)
 
 
 @api_router.post("/{chat_id}/messages", response_model=Message)
@@ -55,12 +58,12 @@ async def send_message(content: str, chat_id: UUID = Path(..., description='ID �
     db_message = await ChatsCrud(db).get_message(message_id=db_message.id)
     db_chat.last_message = db_message
     db_chat.current_user_id = current_user.id
+    to_user_id = db_message.get_to_user_id(from_user_id=current_user.id)
+    unreaded = await ChatsCrud(db).get_unread_count(user_id=to_user_id, chat_id=chat_id)
     await notifier.push(
-        user_id=db_message.get_to_user_id(from_user_id=current_user.id),
-        data=ChatWithUsers.model_validate(
-            db_chat,
-            from_attributes=True
-        ).model_dump_json()
+        user_id=to_user_id,
+        data=set_chat_info(
+            chat=db_chat, unread_count=unreaded).model_dump_json()
     )
     return db_message
 

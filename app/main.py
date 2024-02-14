@@ -29,9 +29,6 @@ app.include_router(verification_router)
 app.include_router(hobbies_router)
 
 
-# Запускаем инициализацию Notifier при запуске приложения
-
-
 @app.on_event("startup")
 async def on_startup():
     await create_db_and_tables()

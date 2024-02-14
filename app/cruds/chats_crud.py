@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import List, Tuple
 import uuid
 from models.user import User
 from cruds.base_crud import BaseCRUD
@@ -9,26 +10,41 @@ from sqlalchemy import and_, func, or_
 
 
 class ChatsCrud(BaseCRUD):
-    async def get_user_chats(self, user_id: uuid.UUID, page: int, page_size: int = 10, search_query: str = None, current_user_id: uuid.UUID = None):
+
+    def get_unread_messages_subquery(self, user_id: uuid.UUID):
+        unread_messages_subquery = select(
+            func.count(Message.id).label('unread_count')
+        ).join(Message.chat).filter(
+            Message.chat_id == Chat.id,
+            Message.from_user_id != user_id,
+            Message.read == False
+        ).scalar_subquery()
+        return unread_messages_subquery
+
+    async def get_user_chats(self, user_id: uuid.UUID, page: int, page_size: int = 10, search_query: str = None) -> List[Tuple[Chat, int]]:
+        '''Returns user chats with unread messages count'''
         end = page * page_size
         start = end - page_size
         subquery = select(
             Message.chat_id,
             func.max(Message.creation_date).label('max_creation_date')
         ).group_by(Message.chat_id).subquery()
-        query = select(Chat)\
+
+        query = select(Chat, self.get_unread_messages_subquery(user_id=user_id))\
             .join(subquery, and_(Chat.id == subquery.c.chat_id))\
             .join(Message, and_(Message.chat_id == Chat.id, Message.creation_date == subquery.c.max_creation_date))\
             .where((Chat.user_id_1 == user_id) | (Chat.user_id_2 == user_id))
+
         if search_query:
             query = query.join(
                 User, or_(Chat.user_id_1 == User.id, Chat.user_id_2 == User.id)
             ).where(User.name.like(f'%{search_query}%'))
-            if current_user_id:
-                query = query.where(User.id != current_user_id)
+            if user_id:
+                query = query.where(User.id != user_id)
+
         result = await self.db.execute(
             query
-            .where(User.name.like(f'%{search_query}%') & (User.id != current_user_id) if search_query else True)
+            .where(User.name.like(f'%{search_query}%') & (User.id != user_id) if search_query else True)
             .order_by(subquery.c.max_creation_date.desc())
             .slice(start, end)
             .options(
@@ -38,10 +54,7 @@ class ChatsCrud(BaseCRUD):
                 selectinload(Chat.user_2).selectinload(User.image)
             )
         )
-        chats = result.scalars().all()
-        for chat in chats:
-            chat.current_user_id = user_id
-        return chats
+        return result.all()
 
     async def read_message(self, message: Message):
         message.read = True
@@ -69,6 +82,16 @@ class ChatsCrud(BaseCRUD):
                 selectinload(Chat.user_2).selectinload(User.image)
             ))
         return query.scalars().first()
+
+    async def get_unread_count(self, chat_id: uuid.UUID, user_id: uuid.UUID):
+        query = await self.db.execute(
+            select(func.count(Message.id)).join(Message.chat).filter(
+                Message.chat_id == chat_id,
+                Message.from_user_id != user_id,
+                Message.read == False
+            )
+        )
+        return query.scalar()
 
     async def get_chat_by_users(self, user_id_1: uuid.UUID, user_id_2: uuid.UUID):
         query = await self.db.execute(
