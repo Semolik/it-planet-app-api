@@ -5,29 +5,43 @@ from cruds.base_crud import BaseCRUD
 from models.chats import Chat, Message
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
-from sqlalchemy import and_, func
+from sqlalchemy import and_, func, or_
 
 
 class ChatsCrud(BaseCRUD):
-    async def get_user_chats(self, user_id: uuid.UUID, page: int, page_size: int = 10):
+    async def get_user_chats(self, user_id: uuid.UUID, page: int, page_size: int = 10, search_query: str = None, current_user_id: uuid.UUID = None):
         end = page * page_size
         start = end - page_size
         subquery = select(
             Message.chat_id,
             func.max(Message.creation_date).label('max_creation_date')
         ).group_by(Message.chat_id).subquery()
-
-        query = await self.db.execute(
-            select(Chat)
-            .join(subquery, and_(Chat.id == subquery.c.chat_id))
-            .join(Message, and_(Message.chat_id == Chat.id, Message.creation_date == subquery.c.max_creation_date))
+        query = select(Chat)\
+            .join(subquery, and_(Chat.id == subquery.c.chat_id))\
+            .join(Message, and_(Message.chat_id == Chat.id, Message.creation_date == subquery.c.max_creation_date))\
             .where((Chat.user_id_1 == user_id) | (Chat.user_id_2 == user_id))
+        if search_query:
+            query = query.join(
+                User, or_(Chat.user_id_1 == User.id, Chat.user_id_2 == User.id)
+            ).where(User.name.like(f'%{search_query}%'))
+            if current_user_id:
+                query = query.where(User.id != current_user_id)
+        result = await self.db.execute(
+            query
+            .where(User.name.like(f'%{search_query}%') & (User.id != current_user_id) if search_query else True)
             .order_by(subquery.c.max_creation_date.desc())
             .slice(start, end)
-            .options(selectinload(Chat.last_message).selectinload(Message.from_user),  selectinload(Chat.user_1).selectinload(User.image),
-                     selectinload(Chat.user_2).selectinload(User.image))
+            .options(
+                selectinload(Chat.last_message).selectinload(
+                    Message.from_user),
+                selectinload(Chat.user_1).selectinload(User.image),
+                selectinload(Chat.user_2).selectinload(User.image)
+            )
         )
-        return query.scalars().all()
+        chats = result.scalars().all()
+        for chat in chats:
+            chat.current_user_id = user_id
+        return chats
 
     async def read_message(self, message: Message):
         message.read = True

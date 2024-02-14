@@ -12,9 +12,14 @@ api_router = APIRouter(tags=["chats"], prefix="/chats")
 
 
 @api_router.get("", response_model=List[ChatWithUsers])
-async def get_chats(page: int = Query(ge=1), db=Depends(get_async_session), current_user=Depends(current_active_user)):
+async def get_chats(
+    query: str = Query(None, description='Поиск по имени пользователя'),
+    page: int = Query(ge=1),
+    db=Depends(get_async_session),
+    current_user=Depends(current_active_user)
+):
     '''Возвращает список чатов пользователя.'''
-    return await ChatsCrud(db).get_user_chats(user_id=current_user.id, page=page)
+    return await ChatsCrud(db).get_user_chats(user_id=current_user.id, page=page, search_query=query, current_user_id=current_user.id)
 
 
 @api_router.post("", response_model=Chat)
@@ -33,6 +38,7 @@ async def get_chat(chat_id: UUID = Path(..., description='ID чата'), db=Depe
     db_chat = await ChatsCrud(db).get_chat(chat_id=chat_id)
     if not db_chat:
         raise HTTPException(status_code=404, detail='Чат не найден')
+    db_chat.current_user_id = current_user.id
     return db_chat
 
 
@@ -48,6 +54,7 @@ async def send_message(content: str, chat_id: UUID = Path(..., description='ID �
     db_message = await ChatsCrud(db).create_message(chat_id=chat_id, from_user_id=current_user.id, content=content)
     db_message = await ChatsCrud(db).get_message(message_id=db_message.id)
     db_chat.last_message = db_message
+    db_chat.current_user_id = current_user.id
     await notifier.push(
         user_id=db_message.get_to_user_id(from_user_id=current_user.id),
         data=ChatWithUsers.model_validate(

@@ -20,6 +20,7 @@ class Chat(BaseModel):
     user_id_2: UUID
     creation_date: datetime
     last_message: Message
+    unreaded: int
 
 
 class ChatWithUsers(Chat):
