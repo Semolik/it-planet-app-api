@@ -14,6 +14,7 @@ from endpoints.likes import api_router as likes_router
 from endpoints.chats import api_router as chats_router
 from endpoints.messages import api_router as messages_router
 from endpoints.notifications import api_router as notifications_router
+from fastapi.middleware.cors import CORSMiddleware
 import models_events
 app = FastAPI()
 
@@ -35,3 +36,10 @@ async def on_startup():
     await init_superuser()
     init_folders()
     await notifier.setup()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["Content-Type", "Set-Cookie"]
+)
