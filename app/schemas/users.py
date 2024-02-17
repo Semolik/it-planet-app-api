@@ -24,7 +24,7 @@ class ChageOnApproveUserData(BaseModel):
 
 
 class CustomUserFields(CustomUserFieldsWithoutDates):
-    birthdate: datetime | None = None
+    birthdate: datetime
     register_date: datetime
 
 
