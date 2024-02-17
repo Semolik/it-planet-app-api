@@ -23,6 +23,8 @@ services:
       interval: 1s
       timeout: 5s
       retries: 30
+    ports:
+      - "5432:5432"
 
   rabbitmq:
     image: "rabbitmq:3"

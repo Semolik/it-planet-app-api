@@ -160,3 +160,14 @@ async def get_user_by_id(id: uuid.UUID):
         async with get_user_db_context(session) as user_db:
             async with get_user_manager_context(user_db) as user_manager:
                 return await user_manager.get(id)
+
+
+async def verify_token(token: str | None, db: AsyncSession):
+    if not token:
+        return
+    try:
+        async with get_user_db_context(db) as user_db:
+            async with get_user_manager_context(user_db) as user_manager:
+                return await user_manager.verify(token)
+    except Exception as e:
+        return
