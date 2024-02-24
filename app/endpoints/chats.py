@@ -103,7 +103,12 @@ async def websocket_endpoint(
     if not chat.can_read(user_id=current_user.id):
         raise WebSocketException(code=403, reason="Access denied")
     notifier: Notifier = get_notifier(f'chat_{chat_id}')()
-    await notifier.connect(user_id=current_user.id, websocket=websocket)
+    try:
+        await notifier.connect(user_id=current_user.id, websocket=websocket)
+        while True:
+            await websocket.receive()
+    except WebSocketDisconnect:
+        notifier.remove(user_id=current_user.id, websocket=websocket)
 
 
 @api_router.websocket("/ws")
@@ -112,5 +117,7 @@ async def websocket_endpoint(websocket: WebSocket, current_user=Depends(get_user
         raise WebSocketException(code=403, reason="Access denied")
     try:
         await notifier.connect(user_id=current_user.id, websocket=websocket)
+        while True:
+            await websocket.receive()
     except WebSocketDisconnect:
         notifier.remove(user_id=current_user.id, websocket=websocket)
