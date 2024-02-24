@@ -13,6 +13,9 @@ class Message(BaseModel):
     read: bool
     updated: bool
 
+    class Config:
+        from_attributes = True
+
 
 class Chat(BaseModel):
     id: UUID
