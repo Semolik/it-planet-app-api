@@ -47,3 +47,6 @@ class Chat(Base):
         uselist=False,
         viewonly=True
     )
+
+    def can_read(self, user_id: UUID):
+        return user_id == self.user_id_1 or user_id == self.user_id_2

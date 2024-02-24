@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, WebSocket, WebSocketDisconnect, WebSocketException
 from utilities.chats import set_chat_info
 from utilities.websockets import get_user_from_cookie
 from users_controller import current_active_user
@@ -40,6 +40,9 @@ async def get_chat(chat_id: UUID = Path(..., description='ID чата'), db=Depe
     db_chat = await ChatsCrud(db).get_chat(chat_id=chat_id)
     if not db_chat:
         raise HTTPException(status_code=404, detail='Чат не найден')
+    if not db_chat.can_read(user_id=current_user.id):
+        raise HTTPException(
+            status_code=403, detail='У вас нет доступа к этому чату')
     db_chat.current_user_id = current_user.id
     unreaded = await ChatsCrud(db).get_unread_count(user_id=current_user.id, chat_id=chat_id)
     return set_chat_info(chat=db_chat, unread_count=unreaded)
@@ -51,7 +54,7 @@ async def send_message(content: str, chat_id: UUID = Path(..., description='ID �
     db_chat = await ChatsCrud(db).get_chat(chat_id=chat_id)
     if not db_chat:
         raise HTTPException(status_code=404, detail='Чат не найден')
-    if db_chat.user_id_1 != current_user.id and db_chat.user_id_2 != current_user.id:
+    if not db_chat.can_read(user_id=current_user.id):
         raise HTTPException(
             status_code=403, detail='У вас нет доступа к этому чату')
     db_message = await ChatsCrud(db).create_message(chat_id=chat_id, from_user_id=current_user.id, content=content)
@@ -65,6 +68,11 @@ async def send_message(content: str, chat_id: UUID = Path(..., description='ID �
         data=set_chat_info(
             chat=db_chat, unread_count=unreaded).model_dump_json()
     )
+    chat_notifier = get_notifier(f'chat_{chat_id}')()
+    await chat_notifier.push(
+        user_id=to_user_id,
+        data=Message.model_validate(db_message).model_dump_json()
+    )
     return db_message
 
 
@@ -74,18 +82,35 @@ async def get_messages(chat_id: UUID = Path(..., description='ID чата'), pag
     db_chat = await ChatsCrud(db).get_chat(chat_id=chat_id)
     if not db_chat:
         raise HTTPException(status_code=404, detail='Чат не найден')
-    if db_chat.user_id_1 != current_user.id and db_chat.user_id_2 != current_user.id:
+    if not db_chat.can_read(user_id=current_user.id):
         raise HTTPException(
             status_code=403, detail='У вас нет доступа к этому чату')
     return await ChatsCrud(db).get_messages(chat_id=chat_id, page=page)
 
 
+@api_router.websocket("/{chat_id}/messages/ws")
+async def websocket_endpoint(
+    websocket: WebSocket,
+    chat_id: UUID = Path(..., description='ID чата'),
+    current_user=Depends(get_user_from_cookie),
+    db=Depends(get_async_session)
+):
+    if not current_user:
+        raise WebSocketException(code=403, reason="Access denied")
+    chat = await ChatsCrud(db).get_chat(chat_id=chat_id)
+    if not chat:
+        raise WebSocketException(code=404, reason="Chat not found")
+    if not chat.can_read(user_id=current_user.id):
+        raise WebSocketException(code=403, reason="Access denied")
+    notifier: Notifier = get_notifier(f'chat_{chat_id}')()
+    await notifier.connect(user_id=current_user.id, websocket=websocket)
+
+
 @api_router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, current_user=Depends(get_user_from_cookie), notifier: Notifier = Depends(get_notifier('chats'))):
+    if not current_user:
+        raise WebSocketException(code=403, reason="Access denied")
     try:
         await notifier.connect(user_id=current_user.id, websocket=websocket)
-        while True:
-            data = await websocket.receive_json()
-            await websocket.send_json(data=data)
     except WebSocketDisconnect:
         notifier.remove(user_id=current_user.id, websocket=websocket)

@@ -3,7 +3,7 @@ services:
   api:
     build: ./app
     ports:
-      - "8016:8000"
+      - "8000:8000"
     volumes:
       - ./app:/app
       - ./content:/content
@@ -23,6 +23,8 @@ services:
       interval: 1s
       timeout: 5s
       retries: 30
+    ports:
+      - "5432:5432"
     volumes:
       - ./db-data:/var/lib/postgresql/data
 
@@ -35,3 +37,14 @@ services:
       interval: 1s
       timeout: 3s
       retries: 30
+
+  smtp4dev:
+    image: rnwood/smtp4dev:v3
+    ports:
+      - 1080:80
+    volumes:
+      - /smtp4dev-data:/smtp4dev
+    environment:
+      - ServerOptions__HostName=$EMAIL_SERVER
+      - RelayOptions__Login=$EMAIL_USERNAME
+      - RelayOptions__Password=$EMAIL_PASSWORD

@@ -1,10 +1,10 @@
-from typing import List
-from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from fastapi import APIRouter, Depends, HTTPException, Path
+from schemas.chats import Message
+from notifier import get_notifier
 from users_controller import current_active_user
 from db.db import get_async_session
 from cruds.chats_crud import ChatsCrud
 from uuid import UUID
-from schemas.chats import Chat, Message
 
 
 api_router = APIRouter(tags=["messages"], prefix="/messages")
@@ -22,4 +22,9 @@ async def read_message(massage_id: UUID = Path(..., description='ID сообще
     if db_message.read:
         raise HTTPException(
             status_code=400, detail='Сообщение уже прочитано')
+    chat_notifier = get_notifier(f'chat_{db_message.chat_id}')()
+    await chat_notifier.push(
+        user_id=db_message.get_to_user_id(from_user_id=current_user.id),
+        data=Message.model_validate(db_message).model_dump_json()
+    )
     await ChatsCrud(db).read_message(db_message)
