@@ -21,7 +21,7 @@ class ChatsCrud(BaseCRUD):
         ).scalar_subquery()
         return unread_messages_subquery
 
-    async def get_user_chats(self, user_id: uuid.UUID, page: int, page_size: int = 10, search_query: str = None) -> List[Tuple[Chat, int]]:
+    async def get_user_chats(self, user_id: uuid.UUID, page: int, page_size: int = 20, search_query: str = None) -> List[Tuple[Chat, int]]:
         '''Returns user chats with unread messages count'''
         end = page * page_size
         start = end - page_size
@@ -105,7 +105,7 @@ class ChatsCrud(BaseCRUD):
     async def create_message(self, chat_id: uuid.UUID, from_user_id: uuid.UUID, content: str) -> Message:
         return await self.create(Message(chat_id=chat_id, from_user_id=from_user_id, content=content))
 
-    async def get_messages(self, chat_id: uuid.UUID, page: int, page_size: int = 10):
+    async def get_messages(self, chat_id: uuid.UUID, page: int, page_size: int = 20):
         end = page * page_size
         start = end - page_size
         query = await self.db.execute(
