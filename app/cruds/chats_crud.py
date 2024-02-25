@@ -110,7 +110,7 @@ class ChatsCrud(BaseCRUD):
         start = end - page_size
         query = await self.db.execute(
             select(Message).where(Message.chat_id == chat_id)
-            .order_by(Message.creation_date.asc())
+            .order_by(Message.creation_date.desc())
             .slice(start, end).options(selectinload(Message.from_user))
         )
         return query.scalars().all()
