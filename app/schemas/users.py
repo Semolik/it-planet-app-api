@@ -52,8 +52,8 @@ class UserReadShortWithEmail(UserReadShort, BaseUserEmail):
     pass
 
 
-class UserCreate(BaseUserCreate, CustomUserFields):
-    pass
+class UserCreate(BaseUserCreate):
+    birthdate: datetime
 
 
 class UserUpdate(BaseUserUpdate, CustomUserFields):
