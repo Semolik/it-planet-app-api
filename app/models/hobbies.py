@@ -2,7 +2,6 @@ from db.db import Base
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import Boolean, Column, ForeignKey, DateTime, func, String
 from uuid import uuid4
-import asyncio
 
 
 class UserHobby(Base):

@@ -8,6 +8,10 @@
 
         docker-compose up
 
+Запустить в режиме разработки
+
+    docker-compose -f docker-compose-dev.yml up
+
 Затем просмотреть конечные точки можно по адресу
 
     http://localhost:8000/docs

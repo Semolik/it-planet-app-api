@@ -1,9 +1,8 @@
 from datetime import datetime
-import re
 import uuid
 from pydantic import BaseModel, EmailStr
 from fastapi_users.schemas import BaseUserCreate, BaseUser, BaseUserUpdate
-from pydantic_core import core_schema
+from schemas.hobbies import Hobby
 
 from schemas.files import ImageLink
 
@@ -31,6 +30,7 @@ class CustomUserFields(CustomUserFieldsWithoutDates):
 class CustomUserFieldsRead(BaseModel):
     image: ImageLink | None = None
     age: int
+    hobbies: list[Hobby]
 
 
 class UserRead(BaseUser[uuid.UUID], CustomUserFields, CustomUserFieldsRead):

@@ -3,7 +3,7 @@ import uuid
 from fastapi import UploadFile
 from sqlalchemy.orm import selectinload
 from sqlalchemy import select, or_, nulls_first, and_
-from models.hobbies import Hobby,UserHobby
+from models.hobbies import Hobby, UserHobby
 from models.files import Image
 from cruds.base_crud import BaseCRUD
 from utilities.files import save_image
@@ -14,7 +14,7 @@ from users_controller import get_user_manager_context
 
 class UsersCrud(BaseCRUD):
     async def get_user_by_id(self, user_id: uuid.UUID) -> User:
-        query = await self.db.execute(select(User).where(User.id == user_id).options(selectinload(User.image)))
+        query = await self.db.execute(select(User).where(User.id == user_id).options(selectinload(User.image), selectinload(User.hobbies)))
         return query.scalars().first()
 
     async def get_user_by_email(self, email: str) -> User:
@@ -60,7 +60,8 @@ class UsersCrud(BaseCRUD):
         if is_verified is not None:
             users = users.where(User.is_verified == is_verified)
         users = users.offset(
-            (page - 1) * page_size).limit(page_size)
+            (page - 1) * page_size).limit(page_size).options(selectinload(User.image), selectinload(User.hobbies))
+
         result = await self.db.execute(users)
         return result.scalars().all()
 
@@ -122,7 +123,7 @@ class UsersCrud(BaseCRUD):
                 )
             )
             .order_by(UserLike.like_date.desc())
-            .slice(start, end)
+            .slice(start, end).options(selectinload(User.image), selectinload(User.hobbies))
         )
 
         return query.scalars().all()
@@ -143,22 +144,23 @@ class UsersCrud(BaseCRUD):
             .join(UserLike, UserLike.liked_user_id == User.id)
             .where(UserLike.user_id == user_id)
             .options(
-                selectinload(User.image)
+                selectinload(User.image),
+                selectinload(User.hobbies)
             )
             .order_by(UserLike.like_date.desc())
             .slice(start, end)
         )
 
         return [UserLikeFull(is_match=is_match is not None, liked_user=user) for user, is_match in query.all()]
-    
+
     async def get_recommended_user(self, user: User, hobbies_ids: List[uuid.UUID], institutions_ids: List[uuid.UUID]):
         query = select(User)
         if len(hobbies_ids) >= 1:
-            query = query.join(UserHobby, User.id == UserHobby.user_id).where(UserHobby.hobby_id.in_(hobbies_ids))
+            query = query.join(UserHobby, User.id == UserHobby.user_id).where(
+                UserHobby.hobby_id.in_(hobbies_ids))
         if len(institutions_ids) >= 1:
             query = query.where(User.institution_id.in_(institutions_ids))
-        query = query.where(User.id != user.id)
+        query = query.where(User.id != user.id).options(
+            selectinload(User.image), selectinload(User.hobbies))
         result = await self.db.execute(query)
         return result.scalars().first()
-        
-        

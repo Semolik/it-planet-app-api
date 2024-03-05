@@ -23,6 +23,7 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     institution_id = Column(UUID(as_uuid=True), ForeignKey(
         Institution.id), nullable=True)
     institution = relationship(Institution, foreign_keys=[institution_id])
+    hobbies = relationship("Hobby", secondary="user_hobbies")
 
     @property
     def age(self) -> int | None:
