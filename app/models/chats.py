@@ -47,7 +47,7 @@ class Chat(Base):
         uselist=False,
         viewonly=True
     )
-    messages = relationship(Message, backref="chat",
+    messages = relationship(Message,
                             cascade="all, delete-orphan")
 
     def can_read(self, user_id: UUID):
