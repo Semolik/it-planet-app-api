@@ -34,6 +34,18 @@ async def create_chat(message: str, user_id: UUID = Query(..., description='ID �
     return await ChatsCrud(db).get_chat(chat_id=db_chat.id)
 
 
+@api_router.delete("/{chat_id}", status_code=204)
+async def delete_chat(chat_id: UUID = Path(..., description='ID чата'), db=Depends(get_async_session), current_user=Depends(current_active_user)):
+    '''Удаляет чат.'''
+    db_chat = await ChatsCrud(db).get_chat(chat_id=chat_id)
+    if not db_chat:
+        raise HTTPException(status_code=404, detail='Чат не найден')
+    if not db_chat.can_read(user_id=current_user.id):
+        raise HTTPException(
+            status_code=403, detail='У вас нет доступа к этому чату')
+    await ChatsCrud(db).delete(db_chat)
+
+
 @api_router.get("/{chat_id}", response_model=ChatWithUsers)
 async def get_chat(chat_id: UUID = Path(..., description='ID чата'), db=Depends(get_async_session), current_user=Depends(current_active_user)):
     '''Возвращает чат по его ID.'''
