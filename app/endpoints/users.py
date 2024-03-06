@@ -24,9 +24,11 @@ async def update_handler(db, user: User, user_data: UserUpdate, current_user: Us
         if user.id == current_user.id and not user_data.is_superuser:
             raise HTTPException(
                 status_code=403, detail="Нельзя понизить себя до обычного пользователя")
-    if user_data.email != user.email and await users_crud.get_user_by_email(user_data.email) is not None:
-        raise HTTPException(
-            status_code=400, detail="Пользователь с таким email уже существует")
+    if user_data.email != user.email:
+        db_user = await users_crud.get_user_by_email(user_data.email)
+        if db_user is not None and db_user.id != user.id:
+            raise HTTPException(
+                status_code=400, detail="Пользователь с таким email уже существует")
     await users_crud.update_user(user=user, user_data=user_data, update_as_superuser=current_user.is_superuser)
     return await users_crud.get_user_by_id(user.id)
 
