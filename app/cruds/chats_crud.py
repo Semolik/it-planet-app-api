@@ -127,6 +127,9 @@ class ChatsCrud(BaseCRUD):
         query = await self.db.execute(
             select(Message).where(Message.chat_id == chat_id)
             .order_by(Message.creation_date.desc())
-            .slice(start, end).options(*self.selectinload_chat())
+            .slice(start, end).options(selectinload(Message.from_user).options(
+                *UsersCrud.selectinload_user_options()
+            ))
+
         )
         return query.scalars().all()
