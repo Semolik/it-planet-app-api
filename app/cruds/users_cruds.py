@@ -72,6 +72,7 @@ class UsersCrud(BaseCRUD):
             user.is_verified = user_data.is_verified
             user.verified = user_data.verified
         user.name = user_data.name
+        user.description = user_data.description
         if user_data.password:
             async with get_user_manager_context(self.db) as user_manager:
                 user.hashed_password = user_manager.password_helper.hash(

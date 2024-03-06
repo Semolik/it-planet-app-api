@@ -13,7 +13,7 @@ class BaseUserEmail(BaseModel):
 
 class CustomUserFieldsWithoutDates(BaseModel):
     name: str
-    discription: str = ''
+    description: str = ''
 
 
 class ChageOnApproveUserData(BaseModel):

@@ -18,7 +18,7 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
         'images.id', ondelete='SET NULL'), nullable=True)
     image = relationship("Image", foreign_keys=[
                          image_id], cascade="all,delete")
-    discription = Column(String, nullable=False, default='')
+    description = Column(String, nullable=False, default='')
     verified = Column(Boolean, nullable=False, default=False)
     institution_id = Column(UUID(as_uuid=True), ForeignKey(
         Institution.id), nullable=True)
