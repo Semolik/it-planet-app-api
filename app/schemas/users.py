@@ -36,6 +36,9 @@ class CustomUserFieldsRead(BaseModel):
 class UserRead(BaseUser[uuid.UUID], CustomUserFields, CustomUserFieldsRead):
     pass
 
+    class Config:
+        from_attributes = True
+
 
 class UserReadWithEmail(UserRead, BaseUserEmail):
     pass
