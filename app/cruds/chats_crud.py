@@ -49,10 +49,7 @@ class ChatsCrud(BaseCRUD):
             .order_by(subquery.c.max_creation_date.desc())
             .slice(start, end)
             .options(
-                selectinload(Chat.last_message).selectinload(
-                    Message.from_user),
-                selectinload(Chat.user_1).selectinload(User.image),
-                selectinload(Chat.user_2).selectinload(User.image)
+                *self.selectinload_chat()
             )
         )
         return result.all()
@@ -130,6 +127,6 @@ class ChatsCrud(BaseCRUD):
         query = await self.db.execute(
             select(Message).where(Message.chat_id == chat_id)
             .order_by(Message.creation_date.desc())
-            .slice(start, end).options(selectinload(Message.from_user))
+            .slice(start, end).options(*self.selectinload_chat())
         )
         return query.scalars().all()
