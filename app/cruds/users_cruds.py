@@ -70,6 +70,7 @@ class UsersCrud(BaseCRUD):
             user.is_superuser = user_data.is_superuser
             user.is_active = user_data.is_active
             user.is_verified = user_data.is_verified
+            user.verified = user_data.verified
         user.name = user_data.name
         if user_data.password:
             async with get_user_manager_context(self.db) as user_manager:

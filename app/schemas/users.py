@@ -23,6 +23,7 @@ class ChageOnApproveUserData(BaseModel):
 
 class CustomUserFields(CustomUserFieldsWithoutDates):
     birthdate: datetime
+    verified: bool
 
 
 class CustomUserFieldsRead(BaseModel):
@@ -30,7 +31,6 @@ class CustomUserFieldsRead(BaseModel):
     age: int
     hobbies: list[Hobby]
     register_date: datetime
-    verified: bool
 
 
 class UserRead(BaseUser[uuid.UUID], CustomUserFields, CustomUserFieldsRead):
