@@ -26,14 +26,21 @@ class CustomUserFields(CustomUserFieldsWithoutDates):
     verified: bool
 
 
-class CustomUserFieldsRead(BaseModel):
+class CustomUserFieldsReadWithotHobbies(BaseModel):
     image: ImageLink | None = None
     age: int
-    hobbies: list[Hobby]
     register_date: datetime
 
 
-class UserRead(BaseUser[uuid.UUID], CustomUserFields, CustomUserFieldsRead):
+class CustomUserFieldsRead(CustomUserFieldsReadWithotHobbies):
+    hobbies: list[Hobby]
+
+
+class UserReadAfterRegister(BaseUser[uuid.UUID], CustomUserFields, CustomUserFieldsReadWithotHobbies):
+    pass
+
+
+class UserRead(UserReadAfterRegister, CustomUserFieldsRead):
     pass
 
 

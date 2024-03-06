@@ -7,6 +7,7 @@ from models.chats import Chat, Message
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from sqlalchemy import and_, func, or_
+from cruds.users_cruds import UsersCrud
 
 
 class ChatsCrud(BaseCRUD):
@@ -76,12 +77,39 @@ class ChatsCrud(BaseCRUD):
     async def get_chat(self, chat_id: uuid.UUID):
         query = await self.db.execute(
             select(Chat).where(Chat.id == chat_id).options(
-                selectinload(Chat.last_message).selectinload(
-                    Message.from_user),
-                selectinload(Chat.user_1).selectinload(User.image),
-                selectinload(Chat.user_2).selectinload(User.image)
-            ))
+                *self.selectinload_chat()
+            )
+        )
         return query.scalars().first()
+
+    async def get_chat_by_users(self, user_id_1: uuid.UUID, user_id_2: uuid.UUID):
+        query = await self.db.execute(
+            select(Chat).where(
+                ((Chat.user_id_1 == user_id_1) & (Chat.user_id_2 == user_id_2)) |
+                ((Chat.user_id_1 == user_id_2) & (Chat.user_id_2 == user_id_1))
+            )
+            .options(
+                *self.selectinload_chat()
+            )
+        )
+        return query.scalars().first()
+
+    def selectinload_chat(self):
+        return [
+            selectinload(Chat.last_message)
+            .selectinload(Message.from_user)
+            .options(
+                *UsersCrud.selectinload_user_options()
+            ),
+            selectinload(Chat.user_1)
+            .options(
+                *UsersCrud.selectinload_user_options()
+            ),
+            selectinload(Chat.user_2)
+            .options(
+                *UsersCrud.selectinload_user_options()
+            ),
+        ]
 
     async def get_unread_count(self, chat_id: uuid.UUID, user_id: uuid.UUID):
         query = await self.db.execute(
@@ -92,15 +120,6 @@ class ChatsCrud(BaseCRUD):
             )
         )
         return query.scalar()
-
-    async def get_chat_by_users(self, user_id_1: uuid.UUID, user_id_2: uuid.UUID):
-        query = await self.db.execute(
-            select(Chat).where(
-                ((Chat.user_id_1 == user_id_1) & (Chat.user_id_2 == user_id_2)) |
-                ((Chat.user_id_1 == user_id_2) & (Chat.user_id_2 == user_id_1))
-            )
-        )
-        return query.scalars().first()
 
     async def create_message(self, chat_id: uuid.UUID, from_user_id: uuid.UUID, content: str) -> Message:
         return await self.create(Message(chat_id=chat_id, from_user_id=from_user_id, content=content))

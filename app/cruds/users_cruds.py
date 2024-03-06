@@ -13,13 +13,18 @@ from users_controller import get_user_manager_context
 
 
 class UsersCrud(BaseCRUD):
+
+    @staticmethod
+    def selectinload_user_options():
+        return selectinload(User.image), selectinload(User.hobbies)
+
     async def get_user_by_id(self, user_id: uuid.UUID) -> User:
-        query = await self.db.execute(select(User).where(User.id == user_id).options(selectinload(User.image), selectinload(User.hobbies)))
+        query = await self.db.execute(select(User).where(User.id == user_id).options(*self.selectinload_user_options()))
         return query.scalars().first()
 
     async def get_user_by_email(self, email: str) -> User:
         user = select(User).where(User.email == email).options(
-            selectinload(User.image))
+            *self.selectinload_user_options())
         result = await self.db.execute(user)
         return result.scalars().first()
 
@@ -60,7 +65,7 @@ class UsersCrud(BaseCRUD):
         if is_verified is not None:
             users = users.where(User.is_verified == is_verified)
         users = users.offset(
-            (page - 1) * page_size).limit(page_size).options(selectinload(User.image), selectinload(User.hobbies))
+            (page - 1) * page_size).limit(page_size).options(*self.selectinload_user_options())
 
         result = await self.db.execute(users)
         return result.scalars().all()
@@ -125,7 +130,7 @@ class UsersCrud(BaseCRUD):
                 )
             )
             .order_by(UserLike.like_date.desc())
-            .slice(start, end).options(selectinload(User.image), selectinload(User.hobbies))
+            .slice(start, end).options(*self.selectinload_user_options())
         )
 
         return query.scalars().all()
@@ -145,10 +150,7 @@ class UsersCrud(BaseCRUD):
             select(User, subquery)
             .join(UserLike, UserLike.liked_user_id == User.id)
             .where(UserLike.user_id == user_id)
-            .options(
-                selectinload(User.image),
-                selectinload(User.hobbies)
-            )
+            .options(*self.selectinload_user_options())
             .order_by(UserLike.like_date.desc())
             .slice(start, end)
         )
@@ -163,6 +165,6 @@ class UsersCrud(BaseCRUD):
         if len(institutions_ids) >= 1:
             query = query.where(User.institution_id.in_(institutions_ids))
         query = query.where(User.id != user.id).options(
-            selectinload(User.image), selectinload(User.hobbies))
+            *self.selectinload_user_options())
         result = await self.db.execute(query)
         return result.scalars().first()
