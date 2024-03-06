@@ -14,7 +14,6 @@ class BaseUserEmail(BaseModel):
 class CustomUserFieldsWithoutDates(BaseModel):
     name: str
     discription: str = ''
-    verified: bool
 
 
 class ChageOnApproveUserData(BaseModel):
@@ -24,13 +23,14 @@ class ChageOnApproveUserData(BaseModel):
 
 class CustomUserFields(CustomUserFieldsWithoutDates):
     birthdate: datetime
-    register_date: datetime
 
 
 class CustomUserFieldsRead(BaseModel):
     image: ImageLink | None = None
     age: int
     hobbies: list[Hobby]
+    register_date: datetime
+    verified: bool
 
 
 class UserRead(BaseUser[uuid.UUID], CustomUserFields, CustomUserFieldsRead):
@@ -52,7 +52,7 @@ class UserReadShortWithEmail(UserReadShort, BaseUserEmail):
     pass
 
 
-class UserCreate(BaseUserCreate):
+class UserCreate(BaseUserCreate, CustomUserFields):
     birthdate: datetime
 
 
