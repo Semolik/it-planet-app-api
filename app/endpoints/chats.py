@@ -46,6 +46,16 @@ async def delete_chat(chat_id: UUID = Path(..., description='ID чата'), db=D
     await ChatsCrud(db).delete(db_chat)
 
 
+@api_router.get("/user/{user_id}", response_model=ChatWithUsers)
+async def get_chat_with_user(user_id: UUID = Path(..., description='ID пользователя'), db=Depends(get_async_session), current_user=Depends(current_active_user)):
+    '''Возвращает чат с пользователем.'''
+    db_chat = await ChatsCrud(db).get_chat_by_users(user_id_1=current_user.id, user_id_2=user_id)
+    if not db_chat:
+        raise HTTPException(status_code=404, detail='Чат не найден')
+    unreaded = await ChatsCrud(db).get_unread_count(user_id=current_user.id, chat_id=db_chat.id)
+    return set_chat_info(chat=db_chat, unread_count=unreaded)
+
+
 @api_router.get("/{chat_id}", response_model=ChatWithUsers)
 async def get_chat(chat_id: UUID = Path(..., description='ID чата'), db=Depends(get_async_session), current_user=Depends(current_active_user)):
     '''Возвращает чат по его ID.'''
@@ -55,7 +65,6 @@ async def get_chat(chat_id: UUID = Path(..., description='ID чата'), db=Depe
     if not db_chat.can_read(user_id=current_user.id):
         raise HTTPException(
             status_code=403, detail='У вас нет доступа к этому чату')
-    db_chat.current_user_id = current_user.id
     unreaded = await ChatsCrud(db).get_unread_count(user_id=current_user.id, chat_id=chat_id)
     return set_chat_info(chat=db_chat, unread_count=unreaded)
 
