@@ -7,5 +7,5 @@ async def get_user_from_cookie(websocket: WebSocket, user_manager=Depends(get_us
     cookie = websocket.cookies.get("fastapiusersauth")
     user = await get_jwt_strategy().read_token(cookie, user_manager)
     if not user or not user.is_active or user.is_verified if is_verified else False:
-        return
+        raise WebSocketException("Invalid user")
     return user
