@@ -8,3 +8,6 @@ class CreateHobby(BaseModel):
 
 class Hobby(CreateHobby):
     id: UUID
+
+    class Config:
+        from_attributes = True
