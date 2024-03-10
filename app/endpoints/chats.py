@@ -97,6 +97,18 @@ async def send_message(content: str, chat_id: UUID = Path(..., description='ID �
     return db_message
 
 
+@api_router.post("/{chat_id}/messages/read", status_code=204)
+async def read_messages(chat_id: UUID = Path(..., description='ID чата'), db=Depends(get_async_session), current_user=Depends(current_active_user)):
+    '''Отмечает сообщения в чате как прочитанные.'''
+    db_chat = await ChatsCrud(db).get_chat(chat_id=chat_id)
+    if not db_chat:
+        raise HTTPException(status_code=404, detail='Чат не найден')
+    if not db_chat.can_read(user_id=current_user.id):
+        raise HTTPException(
+            status_code=403, detail='У вас нет доступа к этому чату')
+    await ChatsCrud(db).read_messages(chat_id=chat_id, user_id=current_user.id)
+
+
 @api_router.get("/{chat_id}/messages", response_model=List[Message])
 async def get_messages(chat_id: UUID = Path(..., description='ID чата'), page: int = Query(ge=1), db=Depends(get_async_session), current_user=Depends(current_active_user)):
     '''Возвращает список сообщений в чате.'''

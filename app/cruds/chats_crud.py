@@ -6,7 +6,7 @@ from cruds.base_crud import BaseCRUD
 from models.chats import Chat, Message
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
-from sqlalchemy import and_, func, or_
+from sqlalchemy import and_, func, or_, update
 from cruds.users_cruds import UsersCrud
 
 
@@ -21,6 +21,20 @@ class ChatsCrud(BaseCRUD):
             Message.read == False
         ).scalar_subquery()
         return unread_messages_subquery
+
+    async def read_messages(self, chat_id: uuid.UUID, user_id: uuid.UUID):
+        print('chat_id', chat_id)
+        await self.db.execute(
+            update(Message).where(
+                Message.chat_id == chat_id,
+                Message.from_user_id != user_id,
+                Message.read == False
+            ).values(
+                read=True,
+                read_date=datetime.now()
+            )
+        )
+        await self.db.commit()
 
     async def get_user_chats(self, user_id: uuid.UUID, page: int, page_size: int = 20, search_query: str = None) -> List[Tuple[Chat, int]]:
         '''Returns user chats with unread messages count'''
