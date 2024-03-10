@@ -23,7 +23,6 @@ class ChatsCrud(BaseCRUD):
         return unread_messages_subquery
 
     async def read_messages(self, chat_id: uuid.UUID, user_id: uuid.UUID):
-        print('chat_id', chat_id)
         await self.db.execute(
             update(Message).where(
                 Message.chat_id == chat_id,

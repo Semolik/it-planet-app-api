@@ -57,7 +57,8 @@ async def get_chat_with_user(user_id: UUID = Path(..., description='ID поль�
 
 
 @api_router.get("/{chat_id}", response_model=ChatWithUsers)
-async def get_chat(chat_id: UUID = Path(..., description='ID чата'), db=Depends(get_async_session), current_user=Depends(current_active_user)):
+async def get_chat(chat_id: UUID = Path(..., description='ID чата'), read: bool = Query(True, description='Отметить сообщения как прочитанные'),
+                   db=Depends(get_async_session), current_user=Depends(current_active_user)):
     '''Возвращает чат по его ID.'''
     db_chat = await ChatsCrud(db).get_chat(chat_id=chat_id)
     if not db_chat:
@@ -65,7 +66,11 @@ async def get_chat(chat_id: UUID = Path(..., description='ID чата'), db=Depe
     if not db_chat.can_read(user_id=current_user.id):
         raise HTTPException(
             status_code=403, detail='У вас нет доступа к этому чату')
-    unreaded = await ChatsCrud(db).get_unread_count(user_id=current_user.id, chat_id=chat_id)
+    if read:
+        await ChatsCrud(db).read_messages(chat_id=chat_id, user_id=current_user.id)
+        unreaded = 0
+    else:
+        unreaded = await ChatsCrud(db).get_unread_count(user_id=current_user.id, chat_id=chat_id)
     return set_chat_info(chat=db_chat, unread_count=unreaded)
 
 
