@@ -11,3 +11,10 @@ class Hobby(CreateHobby):
 
     class Config:
         from_attributes = True
+
+
+class HobbyWithLike(Hobby):
+    liked: bool = False
+
+    class Config:
+        from_attributes = True
