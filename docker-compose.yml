@@ -3,7 +3,7 @@ services:
   api:
     build: ./app
     ports:
-      - "8016:8000"
+      - "8000:8000"
     volumes:
       - ./app:/app
       - ./content:/content
