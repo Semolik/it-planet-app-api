@@ -48,8 +48,6 @@ async def create_verification_request(
     db=Depends(get_async_session),
     current_user=Depends(current_active_user), notifier: Notifier = Depends(get_notifier('chats'))
 ):
-    if current_user.verified:
-        raise HTTPException(400, "Вы уже верифицированы")
     has_active_request = await VerificationCrud(db).last_active_verification_request(user=current_user)
     if has_active_request:
         raise HTTPException(400, "Вы уже отправили запрос на верификацию")
