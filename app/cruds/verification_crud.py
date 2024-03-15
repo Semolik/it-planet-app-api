@@ -65,4 +65,5 @@ class VerificationCrud(BaseCRUD):
             user.name = verification_request.name
             user.birthdate = verification_request.birthdate
         await self.update(user)
-        return await self.update(verification_request)
+        request = await self.update(verification_request)
+        return await self.get_verification_request(request.id)

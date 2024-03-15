@@ -86,8 +86,8 @@ async def update_verification_request(verification_request_id: uuid.UUID, approv
     message_text = f"Ваш запрос на верификацию прошел {'успешно' if approved else 'неудачно'}"
     await send_notification(
         user_id=request.user.id,
-        title=message_title,
-        text=message_text,
+        header=message_title,
+        message=message_text,
         db=db,
     )
     message = MessageSchema(
