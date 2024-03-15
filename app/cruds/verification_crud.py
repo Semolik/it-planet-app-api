@@ -15,7 +15,7 @@ from utilities.files import save_image
 
 class VerificationCrud(BaseCRUD):
     async def get_verification_requests(self, page: int = 1) -> list[VerificationRequest]:
-        return await self.paginate(VerificationRequest, page=page, query_func=lambda q: q.order_by(VerificationRequest.creation_date.desc()))
+        return await self.paginate(VerificationRequest, page=page, query_func=lambda q: self.add_options_to_query(q.order_by(VerificationRequest.creation_date.desc())))
 
     def add_options_to_query(self, query):
         return query.options(
