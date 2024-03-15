@@ -5,7 +5,7 @@ from utilities.notifications import send_notification
 from cruds.institutions_crud import InstitutionsCrud
 from cruds.hobbies_crud import HobbiesCrud
 from cruds.users_cruds import UsersCrud
-from schemas.users import UserLike, UserRead, UserReadShort,  UserUpdate, UserReadWithEmail
+from schemas.users import UserLike, UserRead, UserReadInstitution, UserReadShort,  UserUpdate, UserReadWithEmail
 from schemas.files import ImageInfo
 from users_controller import current_active_user, current_superuser
 from db.db import get_async_session
@@ -76,7 +76,7 @@ async def update_user(
     return await update_handler(db=db, user=db_user, user_data=user, current_user=current_user)
 
 
-@api_router.get("/me", response_model=UserReadWithEmail, name="users:current_user")
+@api_router.get("/me", response_model=UserReadInstitution, name="users:current_user")
 async def get_user_me(
     db=Depends(get_async_session),
     current_user: User = Depends(current_active_user)

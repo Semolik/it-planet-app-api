@@ -3,7 +3,8 @@ import uuid
 from fastapi import UploadFile
 from sqlalchemy.orm import selectinload
 from sqlalchemy import select, or_, nulls_first, and_
-from models.hobbies import Hobby, UserHobby
+from models.locations import Institution
+from models.hobbies import UserHobby
 from models.files import Image
 from cruds.base_crud import BaseCRUD
 from utilities.files import save_image
@@ -16,7 +17,7 @@ class UsersCrud(BaseCRUD):
 
     @staticmethod
     def selectinload_user_options():
-        return selectinload(User.image), selectinload(User.hobbies)
+        return selectinload(User.image), selectinload(User.hobbies), selectinload(User.institution).selectinload(Institution.city)
 
     async def get_user_by_id(self, user_id: uuid.UUID) -> User:
         query = await self.db.execute(select(User).where(User.id == user_id).options(*self.selectinload_user_options()))

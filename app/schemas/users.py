@@ -2,6 +2,7 @@ from datetime import datetime
 import uuid
 from pydantic import BaseModel, EmailStr
 from fastapi_users.schemas import BaseUserCreate, BaseUser, BaseUserUpdate
+from schemas.locations import Institution
 from schemas.hobbies import Hobby
 
 from schemas.files import ImageLink
@@ -48,11 +49,12 @@ class UserReadWithEmail(UserRead, BaseUserEmail):
     pass
 
 
+class UserReadInstitution(UserReadWithEmail):
+    institution: Institution | None
+
+
 class UserReadShort(CustomUserFieldsRead, CustomUserFieldsWithoutDates):
     id: uuid.UUID
-
-    class Config:
-        from_attributes = True
 
 
 class UserReadShortWithEmail(UserReadShort, BaseUserEmail):
