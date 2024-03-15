@@ -64,6 +64,7 @@ class VerificationCrud(BaseCRUD):
         if approved:
             user.name = verification_request.name
             user.birthdate = verification_request.birthdate
+            user.institution_id = verification_request.institution_id
         await self.update(user)
         request = await self.update(verification_request)
         return await self.get_verification_request(request.id)
