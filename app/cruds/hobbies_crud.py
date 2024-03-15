@@ -11,7 +11,7 @@ from schemas.hobbies import HobbyWithLike as HobbyWithLikeSchema
 
 
 class HobbiesCrud(BaseCRUD):
-    async def get_hobbies(self, page: int, hobby_query: str = None, current_user: User = None, page_size: int = 10) -> list[HobbyWithLikeSchema]:
+    async def get_hobbies(self, page: int, hobby_query: str = None, current_user: User = None, page_size: int = 30) -> list[HobbyWithLikeSchema]:
         end = page * page_size
         start = end - page_size
 

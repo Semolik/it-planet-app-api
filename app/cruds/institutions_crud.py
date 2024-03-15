@@ -23,7 +23,7 @@ class InstitutionsCrud(BaseCRUD):
         return await self.paginate(
             Institution,
             page=page,
-            per_page=20,
+            per_page=30,
             query_func=query_func,
             options=[selectinload(Institution.city)]
         )
