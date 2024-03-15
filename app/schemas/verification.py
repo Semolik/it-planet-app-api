@@ -6,9 +6,8 @@ from schemas.locations import Institution
 from schemas.users import ChageOnApproveUserData, UserRead
 
 
-class CreateVerificationRequest(BaseModel):
+class CreateVerificationRequest(ChageOnApproveUserData):
     institution_id: uuid.UUID
-    user_data: ChageOnApproveUserData
 
 
 class VerificationRequest(BaseModel):

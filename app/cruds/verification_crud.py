@@ -1,14 +1,16 @@
+from datetime import datetime
 import uuid
 
 from fastapi import UploadFile
 from schemas.users import ChageOnApproveUserData
 from models.user import User
 from cruds.base_crud import BaseCRUD
+from cruds.users_cruds import UsersCrud
 from models.verification import VerificationRequest
 from models.locations import Institution
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
-from utilities.files import duplicate_image, save_image
+from utilities.files import save_image
 
 
 class VerificationCrud(BaseCRUD):
@@ -21,7 +23,9 @@ class VerificationCrud(BaseCRUD):
             selectinload(VerificationRequest.id_photo),
             selectinload(VerificationRequest.institution).selectinload(
                 Institution.city),
-            selectinload(VerificationRequest.user)
+            selectinload(VerificationRequest.user).options(
+                *UsersCrud.selectinload_user_options())
+
         )
 
     async def get_verification_request(self, verification_request_id: uuid.UUID) -> VerificationRequest:
@@ -37,7 +41,9 @@ class VerificationCrud(BaseCRUD):
                                       .where(VerificationRequest.reviewed == False)))
         return query.scalars().first()
 
-    async def create_verification_request(self, institution_id: uuid.UUID, real_photo: UploadFile, id_photo: UploadFile, user: User, user_data: ChageOnApproveUserData) -> VerificationRequest:
+    async def create_verification_request(
+        self, institution_id: uuid.UUID, real_photo: UploadFile, id_photo: UploadFile, user: User, name: str, birthdate: datetime
+    ) -> VerificationRequest:
         real_photo_model = await save_image(db=self.db, upload_file=real_photo)
         id_photo_model = await save_image(db=self.db, upload_file=id_photo)
         return await self.create(
@@ -46,8 +52,8 @@ class VerificationCrud(BaseCRUD):
                 institution_id=institution_id,
                 real_photo_id=real_photo_model.id,
                 id_photo_id=id_photo_model.id,
-                name=user_data.name,
-                birthdate=user_data.birthdate
+                name=name,
+                birthdate=birthdate.replace(tzinfo=None)
             )
         )
 

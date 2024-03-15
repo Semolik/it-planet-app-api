@@ -40,7 +40,7 @@ async def get_verification_request(verification_request_id: uuid.UUID, db=Depend
 
 @api_router.post("", response_model=VerificationRequest)
 async def create_verification_request(
-    request: CreateVerificationRequest,
+    request: CreateVerificationRequest = Depends(),
     real_photo:  UploadFile = File(
         default=..., description='Реальное фото пользователя'),
     id_photo:  UploadFile = File(
@@ -61,7 +61,8 @@ async def create_verification_request(
         real_photo=real_photo,
         id_photo=id_photo,
         user=current_user,
-        user_data=request.user_data
+        name=request.name,
+        birthdate=request.birthdate
     )
     return await VerificationCrud(db).get_verification_request(verification_request_id=created_request.id)
 
