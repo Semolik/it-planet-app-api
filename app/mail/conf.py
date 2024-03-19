@@ -7,8 +7,8 @@ conf = ConnectionConfig(
     MAIL_FROM=getenv("EMAIL_FROM"),
     MAIL_PORT=int(getenv("EMAIL_PORT")),
     MAIL_SERVER=getenv("EMAIL_SERVER"),
-    MAIL_STARTTLS=True,
+    MAIL_STARTTLS=False,
     MAIL_SSL_TLS=False,
     TEMPLATE_FOLDER=Path(__file__).parent / 'templates',
-    USE_CREDENTIALS=True,
+    USE_CREDENTIALS=False,
 )
