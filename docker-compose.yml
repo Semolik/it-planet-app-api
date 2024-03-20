@@ -9,6 +9,8 @@ services:
       - ./content:/content
     env_file:
       - .env
+    environment:
+      - API_HOST=https://frienda.semolik.ru
     depends_on:
       db:
         condition: service_healthy
