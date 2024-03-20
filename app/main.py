@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from notifier import notifier
 from utilities.files import init_folders
 from db.init import init_superuser
@@ -28,6 +29,7 @@ app.include_router(files_router)
 app.include_router(locations_router)
 app.include_router(verification_router)
 app.include_router(hobbies_router)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 @app.on_event("startup")
@@ -38,7 +40,12 @@ async def on_startup():
     await notifier.setup()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://frienda-api.semolik.ru"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost",
+        "https://localhost",
+        "https://frienda-api.semolik.ru"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["Content-Type", "Set-Cookie"]
