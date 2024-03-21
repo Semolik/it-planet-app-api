@@ -49,3 +49,13 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /nginx/htmlnginx/html/.well-known:/opt/www/.well-known
       - ./mailserver:/data
+  restarter:
+    image: docker:cli
+    volumes: [ "/var/run/docker.sock:/var/run/docker.sock" ]
+    command:
+      [
+        "/bin/sh",
+        "-c",
+        "while true; do sleep 3600; docker restart it-planet-app-api-api-1; done"
+      ]
+    restart: always
