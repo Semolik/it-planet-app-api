@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from notifier import notifier
 from utilities.files import init_folders
 from db.init import init_superuser
 from db.db import create_db_and_tables
@@ -37,7 +36,6 @@ async def on_startup():
     await create_db_and_tables()
     await init_superuser()
     init_folders()
-    await notifier.setup()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[

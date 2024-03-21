@@ -14,8 +14,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
     restart: on-failure
   db:
     env_file:
@@ -29,16 +27,7 @@ services:
     volumes:
       - ./db-data:/var/lib/postgresql/data
     restart: always
-  rabbitmq:
-    restart: always
-    image: "rabbitmq:3"
-    env_file:
-      - .env
-    healthcheck:
-      test: rabbitmq-diagnostics check_port_connectivity
-      interval: 1s
-      timeout: 3s
-      retries: 30
+
   mailserver:
     image: analogic/poste.io
     container_name: mailserver
