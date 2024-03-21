@@ -12,8 +12,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
   db:
     env_file:
       - .env
@@ -27,17 +25,6 @@ services:
       - "5432:5432"
     volumes:
       - ./db-data:/var/lib/postgresql/data
-
-  rabbitmq:
-    image: "rabbitmq:3"
-    env_file:
-      - .env
-    healthcheck:
-      test: rabbitmq-diagnostics check_port_connectivity
-      interval: 1s
-      timeout: 3s
-      retries: 30
-
   smtp4dev:
     image: rnwood/smtp4dev:v3
     ports:
