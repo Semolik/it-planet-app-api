@@ -25,13 +25,3 @@ services:
       - "5432:5432"
     volumes:
       - ./db-data:/var/lib/postgresql/data
-  smtp4dev:
-    image: rnwood/smtp4dev:v3
-    ports:
-      - 1080:80
-    volumes:
-      - /smtp4dev-data:/smtp4dev
-    environment:
-      - ServerOptions__HostName=$EMAIL_SERVER
-      - RelayOptions__Login=$EMAIL_USERNAME
-      - RelayOptions__Password=$EMAIL_PASSWORD
