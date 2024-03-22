@@ -11,7 +11,6 @@ from cruds.base_crud import BaseCRUD
 content_folder = '/content'
 images_folder = 'images'
 images_extension = '.png'
-api_prefix = '/api'
 api_host = os.getenv('API_HOST', '')
 supported_image_extensions = {
     ex for ex, f in pillow.registered_extensions().items() if f in pillow.OPEN}
@@ -28,7 +27,7 @@ def init_folders():
 
 
 def get_image_link(image_id: UUID) -> str:
-    return f'{api_host}{api_prefix}/images/{image_id}'
+    return f'{api_host}/images/{image_id}'
 
 
 async def duplicate_image(db: AsyncSession, image: Image) -> Image:
