@@ -165,7 +165,7 @@ class UsersCrud(BaseCRUD):
                 UserHobby.hobby_id.in_(hobbies_ids))
         if len(institutions_ids) >= 1:
             query = query.where(User.institution_id.in_(institutions_ids))
-        query = query.where(User.id != user.id).options(
+        query = query.where(User.id != user.id, User.image_id != None).options(
             *self.selectinload_user_options())
         result = await self.db.execute(query)
         return result.scalars().first()
