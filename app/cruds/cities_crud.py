@@ -8,9 +8,17 @@ class CitiesCrud(BaseCRUD):
     async def create_city(self, name: str) -> City:
         return await self.create(City(name=name))
 
-    async def get_cities(self) -> list[City]:
-        query = await self.db.execute(select(City))
-        return query.scalars().all()
+    async def get_cities(self, query: str = None, page: int = 1):
+        def query_func(q):
+            if query:
+                q = q.where(City.name.ilike(f"%{query}%"))
+            return q
+        return await self.paginate(
+            City,
+            page=page,
+            per_page=30,
+            query_func=query_func
+        )
 
     async def get_city(self, city_id: uuid.UUID) -> City:
         query = await self.db.execute(select(City).where(City.id == city_id))

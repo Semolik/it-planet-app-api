@@ -20,13 +20,13 @@ async def get_verification_requests(page: int = Query(1, ge=1), db=Depends(get_a
     return await VerificationCrud(db).get_verification_requests(page=page)
 
 
-@api_router.get("/me", response_model=VerificationRequest)
+@api_router.get("/me", response_model=VerificationRequest | None)
 async def get_user_verification_request(
         db=Depends(get_async_session),
         current_user=Depends(current_active_user)):
     verification_request = await VerificationCrud(db).last_active_verification_request(user=current_user)
     if not verification_request:
-        raise HTTPException(404, "Запрос на верификацию не найден")
+        return None
     return verification_request
 
 
@@ -71,7 +71,8 @@ async def delete_verification_request(verification_request_id: uuid.UUID, db=Dep
     verification_request = await VerificationCrud(db).get_verification_request(verification_request_id=verification_request_id)
     if not verification_request:
         raise HTTPException(404, "Запрос на верификацию не найден")
-    if verification_request.user_id != current_user.id:
+    print(verification_request.user_id, current_user.id)
+    if verification_request.user_id != current_user.id and not current_user.is_superuser:
         raise HTTPException(403, "Нет доступа")
     await VerificationCrud(db).delete(verification_request)
 

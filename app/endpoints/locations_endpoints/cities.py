@@ -1,6 +1,6 @@
 from typing import List
 import uuid
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from cruds.cities_crud import CitiesCrud
 from schemas.locations import CreateCity, City
 from users_controller import current_superuser
@@ -17,8 +17,10 @@ async def create_city(city: CreateCity, db=Depends(get_async_session)):
 
 
 @api_router.get("", response_model=List[City])
-async def get_cities(db=Depends(get_async_session)):
-    return await CitiesCrud(db).get_cities()
+async def get_cities(query: str = None, page: int = Query(1, ge=1), db=Depends(get_async_session)):
+    return await CitiesCrud(db).get_cities(
+        query=query, page=page
+    )
 
 
 @api_router.get("/{city_id}", response_model=City)

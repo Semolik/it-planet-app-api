@@ -20,3 +20,5 @@ class VerificationRequest(BaseModel):
     institution: Institution
     real_photo: ImageLink
     id_photo: ImageLink
+    name: str
+    birthdate: datetime
