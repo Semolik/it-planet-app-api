@@ -4,8 +4,6 @@ from utilities.files import init_folders
 from db.init import init_superuser
 from db.db import create_db_and_tables
 
-from fastapi.middleware.cors import CORSMiddleware #Roma
-
 from endpoints.auth import api_router as auth_router
 from endpoints.users import api_router as users_router
 from endpoints.files import api_router as files_router
@@ -32,14 +30,6 @@ app.include_router(verification_router)
 app.include_router(hobbies_router)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=['*'],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 @app.on_event("startup")
 async def on_startup():
     await create_db_and_tables()
@@ -51,7 +41,8 @@ app.add_middleware(
         "http://localhost:3000",
         "http://localhost",
         "https://localhost",
-        "https://frienda-api.semolik.ru"
+        "https://frienda-api.semolik.ru",
+        "*"
     ],
     allow_credentials=True,
     allow_methods=["*"],
