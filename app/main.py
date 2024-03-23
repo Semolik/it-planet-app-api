@@ -42,7 +42,8 @@ app.add_middleware(
         "http://localhost",
         "https://localhost",
         "https://frienda-api.semolik.ru",
-        "*"
+        "79.136.136.224:3000",
+        "http://79.136.136.224:3000",
     ],
     allow_credentials=True,
     allow_methods=["*"],
