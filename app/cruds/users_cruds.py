@@ -171,4 +171,11 @@ class UsersCrud(BaseCRUD):
         query = query.where(User.id.notin_(subquery))
         query = query.options(*self.selectinload_user_options())
         result = await self.db.execute(query)
-        return result.scalars().first()
+        recommended_user = result.scalars().first()
+        if recommended_user is None:
+            query = select(User).where(
+                User.id != user.id, User.image_id != None)
+            query = query.options(*self.selectinload_user_options())
+            result = await self.db.execute(query)
+            recommended_user = result.scalars().first()
+        return recommended_user
