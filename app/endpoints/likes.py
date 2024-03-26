@@ -10,7 +10,7 @@ from cruds.users_cruds import UsersCrud
 api_router = APIRouter(prefix="/likes", tags=["likes"])
 
 
-@api_router.get("/matches", response_model=List[UserReadShort])
+@api_router.get("/matches", response_model=List[UserLikeFull])
 async def get_matches(page: int = Query(1, ge=1), db=Depends(get_async_session), current_user=Depends(current_active_user)):
     '''Возвращает список пользователей, которые взаимно лайкнули текущего пользователя.'''
     return await UsersCrud(db).get_matches(user=current_user, page=page)
@@ -18,5 +18,5 @@ async def get_matches(page: int = Query(1, ge=1), db=Depends(get_async_session),
 
 @api_router.get("", response_model=List[UserLikeFull])
 async def get_likes(page: int = Query(1, ge=1), db=Depends(get_async_session), current_user=Depends(current_active_user)):
-    '''Возвращает список пользователей, которые лайкнули текущего пользователя.'''
+    '''Возвращает список пользователей, которых вы лайкнули.'''
     return await UsersCrud(db).get_user_likes(user=current_user, page=page)

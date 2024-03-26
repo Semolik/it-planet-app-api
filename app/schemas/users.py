@@ -56,6 +56,9 @@ class UserReadInstitution(UserReadWithEmail):
 class UserReadShort(CustomUserFieldsRead, CustomUserFieldsWithoutDates):
     id: uuid.UUID
 
+    class Config:
+        from_attributes = True
+
 
 class UserReadShortWithEmail(UserReadShort, BaseUserEmail):
     pass

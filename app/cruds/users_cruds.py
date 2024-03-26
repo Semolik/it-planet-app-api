@@ -113,7 +113,7 @@ class UsersCrud(BaseCRUD):
             return False
         return user_like.like and liked_user_like.like
 
-    async def get_matches(self, user: User, page: int = 1, page_size: int = 20) -> list[User]:
+    async def get_matches(self, user: User, page: int = 1, page_size: int = 20) -> list[UserLikeFull]:
         user_id = user.id
         end = page * page_size
         start = end - page_size
@@ -133,8 +133,8 @@ class UsersCrud(BaseCRUD):
             .order_by(UserLike.like_date.desc())
             .slice(start, end).options(*self.selectinload_user_options())
         )
-
-        return query.scalars().all()
+        print(query)
+        return [UserLikeFull(is_match=True, liked_user=user) for user in query.scalars().all()]
 
     async def get_user_likes(self, user: User, page: int = 1, page_size: int = 20) -> list[UserLikeFull]:
         user_id = user.id
