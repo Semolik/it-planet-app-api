@@ -11,14 +11,14 @@ from schemas.hobbies import HobbyWithLike as HobbyWithLikeSchema
 
 
 class HobbiesCrud(BaseCRUD):
-    async def get_hobbies(self, page: int, hobby_query: str = None, current_user: User = None, page_size: int = 30) -> list[HobbyWithLikeSchema]:
+    async def get_hobbies(self, page: int, hobby_query: str = None, current_user: User = None, page_size: int = 30, used: bool = False) -> list[HobbyWithLikeSchema]:
         end = page * page_size
         start = end - page_size
 
         async def get_hobbies_(liked):
             liked_ = liked and current_user
-            query = select(Hobby).outerjoin(
-                UserHobby, Hobby.id == UserHobby.hobby_id).order_by(
+            query = select(Hobby).join(
+                UserHobby, Hobby.id == UserHobby.hobby_id, isouter=not used).order_by(
                 desc(count(UserHobby.user_id))).group_by(Hobby.id)
             query = query.slice(start, end)
             if hobby_query:

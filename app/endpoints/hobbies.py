@@ -1,6 +1,6 @@
 from typing import List
 import uuid
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from fastapi.params import Query
 from cruds.hobbies_crud import HobbiesCrud
 from users_controller import current_superuser, current_active_user, optional_current_user
@@ -45,10 +45,14 @@ async def delete_my_hobby(hobby_id: uuid.UUID, db=Depends(get_async_session), cu
         await HobbiesCrud(db).delete(user_hobby)
 
 
+@api_router.get("/all", response_model=List[HobbyWithLike])
 @api_router.get("", response_model=List[HobbyWithLike])
-async def get_hobbies(page: int = Query(ge=1), query: str = None, db=Depends(get_async_session), current_user=Depends(optional_current_user)):
+async def get_hobbies(
+    request: Request,
+    page: int = Query(ge=1), query: str = None, db=Depends(get_async_session), current_user=Depends(optional_current_user)
+):
     '''Возвращает список хобби, отсортированный по количеству пользователей, занимающихся этим хобби.'''
-    return await HobbiesCrud(db).get_hobbies(page=page, hobby_query=query, current_user=current_user)
+    return await HobbiesCrud(db).get_hobbies(page=page, hobby_query=query, current_user=current_user, used=bool(request.url.path != "/hobbies/all"))
 
 
 @api_router.put("/{hobby_id}", response_model=Hobby, dependencies=[Depends(current_superuser)])
