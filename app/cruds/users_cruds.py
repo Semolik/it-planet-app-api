@@ -2,7 +2,7 @@ from typing import List
 import uuid
 from fastapi import UploadFile
 from sqlalchemy.orm import selectinload
-from sqlalchemy import select, or_, nulls_first, and_
+from sqlalchemy import func, select, or_, nulls_first, and_
 from models.locations import Institution
 from models.hobbies import UserHobby
 from models.files import Image
@@ -159,23 +159,21 @@ class UsersCrud(BaseCRUD):
         return [UserLikeFull(is_match=is_match is not None, liked_user=user) for user, is_match in query.all()]
 
     async def get_recommended_user(self, user: User, hobbies_ids: List[uuid.UUID], institutions_ids: List[uuid.UUID]):
-        query = select(User)
+        query = select(User).order_by(func.random())
         if len(hobbies_ids) >= 1:
             query = query.join(UserHobby, User.id == UserHobby.user_id).where(
                 UserHobby.hobby_id.in_(hobbies_ids))
         if len(institutions_ids) >= 1:
             query = query.where(User.institution_id.in_(institutions_ids))
         query = query.where(User.id != user.id, User.image_id != None)
-        subquery = select(UserLike.liked_user_id).where(
-            UserLike.user_id == user.id)
-        query = query.where(User.id.notin_(subquery))
-        query = query.options(*self.selectinload_user_options())
-        result = await self.db.execute(query)
-        recommended_user = result.scalars().first()
+        liked_users_subquery = select(UserLike.liked_user_id).where(
+            UserLike.user_id == user.id).as_scalar()
+        rec_query = query.where(User.id.notin_(liked_users_subquery))
+        rec_query = query.options(*self.selectinload_user_options())
+        rec_result = await self.db.execute(rec_query)
+        recommended_user = rec_result.scalars().first()
         if recommended_user is None:
-            query = select(User).where(
-                User.id != user.id, User.image_id != None)
-            query = query.options(*self.selectinload_user_options())
-            result = await self.db.execute(query)
-            recommended_user = result.scalars().first()
+            rec_query = query
+            rec_result = await self.db.execute(rec_query)
+            recommended_user = rec_result.scalars().first()
         return recommended_user
