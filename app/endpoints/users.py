@@ -103,6 +103,27 @@ async def get_recommended(
     return await UsersCrud(db).get_recommended_user(user=current_user, hobbies_ids=hobbies_ids, institutions_ids=institutions_ids)
 
 
+@api_router.get("/recommended/list", response_model=List[UserReadShort])
+async def get_recommended_list(
+    hobbies_ids: List[uuid.UUID] = Query([]),
+    institutions_ids: List[uuid.UUID] = Query([]),
+    db=Depends(get_async_session),
+    current_user: User = Depends(current_active_user)
+):
+    for hobby_id in hobbies_ids:
+        hobby = await HobbiesCrud(db).get_hobby(hobby_id)
+        if not hobby:
+            raise HTTPException(status_code=404, detail="Хобби не найдено")
+
+    for institution_id in institutions_ids:
+        institution = await InstitutionsCrud(db).get_institution(institution_id=institution_id)
+        if not institution:
+            raise HTTPException(404, "Образовательное учреждение не найдено")
+    return [
+        await UsersCrud(db).get_recommended_user(user=current_user, hobbies_ids=hobbies_ids, institutions_ids=institutions_ids) for _ in range(10)
+    ]
+
+
 @api_router.get("/{user_id}", response_model=Union[UserReadWithEmail, UserRead])
 async def get_user(
     user_id: uuid.UUID,

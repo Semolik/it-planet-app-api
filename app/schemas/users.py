@@ -82,3 +82,4 @@ class UserLike(BaseModel):
 class UserLikeFull(BaseModel):
     is_match: bool = False
     liked_user: UserReadShort
+    is_liked: bool = True
