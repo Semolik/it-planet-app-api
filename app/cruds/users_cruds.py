@@ -140,7 +140,7 @@ class UsersCrud(BaseCRUD):
         end = page * page_size
         start = end - page_size
         subquery = select(UserLike.like).where(
-            UserLike.user_id == user_id, UserLike.liked_user_id == User.id).correlate(User).as_scalar()
+            UserLike.user_id == User.id, UserLike.liked_user_id == user_id, UserLike.like == True).correlate(User).as_scalar()
         query = await self.db.execute(
             select(User, subquery)
             .join(UserLike, UserLike.liked_user_id == User.id)
@@ -149,7 +149,6 @@ class UsersCrud(BaseCRUD):
             .order_by(UserLike.like_date.desc())
             .slice(start, end)
         )
-
         return [UserLikeFull(is_match=is_match is not None, liked_user=user) for user, is_match in query.all()]
 
     async def get_random_user(self, not_user_id: uuid.UUID) -> User:
