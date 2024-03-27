@@ -158,6 +158,12 @@ class UsersCrud(BaseCRUD):
 
         return [UserLikeFull(is_match=is_match is not None, liked_user=user) for user, is_match in query.all()]
 
+    async def get_random_user(self, not_user_id: uuid.UUID) -> User:
+        query = select(User).where(User.id != not_user_id, User.image_id != None).order_by(
+            func.random()).options(*self.selectinload_user_options())
+        result = await self.db.execute(query)
+        return result.scalars().first()
+
     async def get_recommended_user(self, user: User, hobbies_ids: List[uuid.UUID], institutions_ids: List[uuid.UUID]):
         query = select(User).order_by(func.random())
         if len(hobbies_ids) >= 1:
@@ -176,4 +182,6 @@ class UsersCrud(BaseCRUD):
             rec_query = query
             rec_result = await self.db.execute(rec_query)
             recommended_user = rec_result.scalars().first()
+            if recommended_user is None:
+                return await self.get_random_user(user.id)
         return recommended_user
