@@ -140,7 +140,7 @@ class UsersCrud(BaseCRUD):
         end = page * page_size
         start = end - page_size
         subquery = select(UserLike.like).where(
-            UserLike.user_id == user_id, UserLike.liked_user_id == User.id).as_scalar()
+            UserLike.user_id == user_id, UserLike.liked_user_id == User.id).correlate(User).as_scalar()
         query = await self.db.execute(
             select(User, subquery)
             .join(UserLike, UserLike.liked_user_id == User.id)
