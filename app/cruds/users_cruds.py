@@ -136,15 +136,6 @@ class UsersCrud(BaseCRUD):
         print(query)
         return [UserLikeFull(is_match=True, liked_user=user) for user in query.scalars().all()]
 
-    async def is_match(self, user: User, liked_user: User) -> bool:
-        user_like = await self.get_user_like(user, liked_user)
-        if not user_like:
-            return False
-        liked_user_like = await self.get_user_like(liked_user, user)
-        if not liked_user_like:
-            return False
-        return user_like.like and liked_user_like.like
-
     async def get_user_likes(self, user: User, page: int = 1, page_size: int = 20) -> list[UserLikeFull]:
         user_id = user.id
         end = page * page_size
@@ -165,9 +156,7 @@ class UsersCrud(BaseCRUD):
             .slice(start, end)
         )
 
-        return [UserLikeFull(is_match=(
-            await self.is_match(user=user, liked_user=user)
-        ), liked_user=user) for user, is_match in query.all()]
+        return [UserLikeFull(is_match=is_match is not None, liked_user=user) for user, is_match in query.all()]
 
     async def get_random_user(self, not_user_id: uuid.UUID) -> User:
         query = select(User).where(User.id != not_user_id, User.image_id != None).order_by(
