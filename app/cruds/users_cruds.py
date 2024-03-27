@@ -133,7 +133,6 @@ class UsersCrud(BaseCRUD):
             .order_by(UserLike.like_date.desc())
             .slice(start, end).options(*self.selectinload_user_options())
         )
-        print(query)
         return [UserLikeFull(is_match=True, liked_user=user) for user in query.scalars().all()]
 
     async def get_user_likes(self, user: User, page: int = 1, page_size: int = 20) -> list[UserLikeFull]:
@@ -141,12 +140,7 @@ class UsersCrud(BaseCRUD):
         end = page * page_size
         start = end - page_size
         subquery = select(UserLike.like).where(
-            and_(
-                UserLike.user_id == UserLike.liked_user_id,
-                UserLike.user_id == user_id,
-                UserLike.like == True
-            )
-        ).as_scalar()
+            UserLike.user_id == user_id, UserLike.liked_user_id == User.id).as_scalar()
         query = await self.db.execute(
             select(User, subquery)
             .join(UserLike, UserLike.liked_user_id == User.id)
