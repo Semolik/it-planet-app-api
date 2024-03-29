@@ -63,7 +63,7 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
                                 ссылкам.
                             </p>
                             <a
-                                href="{getenv('RESET_PASSWORD_URL').format(token=token)}"
+                                href="{getenv('API_HOST', '')}/reset-password?token={token}"
                                 class="btn btn-primary"
                                 target="_blank"
                             >
@@ -92,7 +92,7 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
                                 Для подтверждения вашей учетной записи, пожалуйста, нажмите на кнопку ниже:
                             </p>
                             <a
-                                href="{getenv('VERIFY_ACCOUNT_URL').format(token=token)}"
+                                href="{getenv('API_HOST', '')}/verify-email?token={token}"
                                 class="btn btn-primary"
                                 target="_blank"
                             >

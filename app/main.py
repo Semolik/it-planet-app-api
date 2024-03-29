@@ -28,7 +28,14 @@ app.include_router(files_router)
 app.include_router(locations_router)
 app.include_router(verification_router)
 app.include_router(hobbies_router)
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount(
+    "/",
+    StaticFiles(
+        directory="web/.output/public",
+        html=True
+    ), name="static"
+)
+
 
 @app.on_event("startup")
 async def on_startup():

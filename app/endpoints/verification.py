@@ -1,6 +1,6 @@
 from typing import List
 import uuid
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException,  UploadFile
 from fastapi.params import Query
 from fastapi_mail import FastMail, MessageSchema, MessageType
 from utilities.notifications import send_notification
@@ -11,7 +11,6 @@ from schemas.verification import CreateVerificationRequest, VerificationRequest
 from users_controller import current_superuser, current_active_user
 from db.db import get_async_session
 from mail.conf import conf
-
 api_router = APIRouter(prefix="/verification", tags=["verification"])
 
 

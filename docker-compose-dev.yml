@@ -6,12 +6,14 @@ services:
       - "8000:8000"
     volumes:
       - ./app:/app
+      - ./app/web:/web
       - ./content:/content
     env_file:
       - .env
     depends_on:
       db:
         condition: service_healthy
+    restart: on-failure
   db:
     env_file:
       - .env
