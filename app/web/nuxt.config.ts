@@ -13,6 +13,10 @@ export default defineNuxtConfig({
         },
         download: true,
     },
+    colorMode: {
+        preference: "light",
+        fallback: "light",
+    },
     runtimeConfig: {
         public: {
             apiBase:
