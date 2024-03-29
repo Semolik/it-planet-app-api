@@ -33,5 +33,6 @@ body,
     transition: color 0.2s, background-color 0.2s, border-color 0.2s,
         opacity 0.2s;
     font-family: "Jost", sans-serif;
+    color: black;
 }
 </style>
