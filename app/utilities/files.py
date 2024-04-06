@@ -38,7 +38,7 @@ async def duplicate_image(db: AsyncSession, image: Image) -> Image:
     return image_model
 
 
-async def save_image(db: AsyncSession,  upload_file: UploadFile, resize_image_options=(400, 400),
+async def save_image(db: AsyncSession,  upload_file: UploadFile, resize_image_options=(1000, 1000),
                      detail_error_message="поврежденное изображение") -> Image:
 
     originalFileName = upload_file.filename
