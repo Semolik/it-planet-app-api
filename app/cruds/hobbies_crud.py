@@ -25,19 +25,19 @@ class HobbiesCrud(BaseCRUD):
                 query = query.where(Hobby.name.ilike(f"%{hobby_query}%"))
             if liked_:
                 query = query.where(UserHobby.user_id == current_user.id)
-            else:
-                query = query.where(UserHobby.user_id == None)
+            elif  used:
+                query = query.where(UserHobby.user_id != current_user.id)
             query = query.slice(start, end)
             return (await self.db.execute(query)).scalars().all()
         liked_hobbies = await get_hobbies_(True)
-        if len(liked_hobbies) > page_size:
-            return liked_hobbies
-        other_hobbies = await get_hobbies_(False)
         hobbies = []
         for hobby in liked_hobbies:
             hobby_obj = HobbyWithLikeSchema.model_validate(hobby)
             hobby_obj.liked = True
             hobbies.append(hobby_obj)
+        if len(liked_hobbies) > page_size:
+            return hobbies
+        other_hobbies = await get_hobbies_(False)
         for hobby in other_hobbies:
             hobby_obj = HobbyWithLikeSchema.model_validate(hobby)
             hobby_obj.liked = False
