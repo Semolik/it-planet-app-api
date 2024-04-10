@@ -37,8 +37,11 @@ class HobbiesCrud(BaseCRUD):
             hobbies.append(hobby_obj)
         if len(liked_hobbies) > page_size:
             return hobbies
+        liked_hobbies_ids = [hobby.id for hobby in liked_hobbies]
         other_hobbies = await get_hobbies_(False)
         for hobby in other_hobbies:
+            if hobby.id in liked_hobbies_ids:
+                continue
             hobby_obj = HobbyWithLikeSchema.model_validate(hobby)
             hobby_obj.liked = False
             hobbies.append(hobby_obj)
