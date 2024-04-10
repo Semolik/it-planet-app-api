@@ -31,7 +31,7 @@ app.include_router(hobbies_router)
 app.mount(
     "/",
     StaticFiles(
-        directory="web/.output/public",
+        directory="/web-build",
         html=True
     ), name="static"
 )
