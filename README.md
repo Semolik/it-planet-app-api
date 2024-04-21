@@ -10,7 +10,7 @@
 
 Запустить проект
 
-        docker-compose up
+    docker-compose up
 
 Запустить в режиме разработки
 
